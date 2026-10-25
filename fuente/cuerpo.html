@@ -1,0 +1,244 @@
+<div id="app">
+
+  <!-- Fondo: cielo estrellado (decorativo) -->
+  <div id="cielo" aria-hidden="true"></div>
+
+  <!-- ===================== PANTALLA: INICIO ===================== -->
+  <section id="p-inicio" class="pantalla" aria-label="Inicio">
+    <h1 class="titulo" aria-label="Pipo y los Planetas">
+      <span class="t-pipo" aria-hidden="true"><span class="t-l l1">P</span><span class="t-l l2">i</span><span class="t-l l3">p</span><span class="t-o"><span class="t-o-anillo"></span></span></span>
+      <span class="t-sub" aria-hidden="true">y los planetas</span>
+    </h1>
+    <div class="inicio-pipo pipo-slot tocable" data-slot="inicio"></div>
+    <button id="btnJugar" class="btn btn-jugar cargando" type="button" aria-label="Jugar">
+      <span class="ico" data-icono="jugar"></span>
+      <svg class="carga-voces" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46"/></svg>
+    </button>
+  </section>
+
+  <!-- ===================== PANTALLA: ¿QUIÉN JUEGA? ===================== -->
+  <section id="p-perfiles" class="pantalla" aria-label="Quién juega">
+    <header class="barra">
+      <button class="btn btn-icono btn-volver-inicio" type="button" aria-label="Volver"><span class="ico" data-icono="atras"></span></button>
+    </header>
+    <div class="perfiles-cab"><div class="pipo-slot perfiles-pipo tocable" data-slot="perfiles"></div></div>
+    <div class="perfiles-lista" id="perfilesLista"></div>
+  </section>
+
+  <!-- ===================== PANTALLA: NUEVO EXPLORADOR ===================== -->
+  <section id="p-nuevo" class="pantalla" aria-label="Nuevo explorador">
+    <header class="barra">
+      <button class="btn btn-icono" id="btnNuevoAtras" type="button" aria-label="Atrás"><span class="ico" data-icono="atras"></span></button>
+      <div class="pasos-nuevo" id="pasosNuevo"><i></i><i></i><i></i></div>
+    </header>
+    <div class="nuevo-cab"><div class="pipo-slot nuevo-pipo" data-slot="nuevo"></div><div class="burbuja-icono emo" id="nuevoIcono">🐾</div></div>
+    <div class="nuevo-cuerpo" id="nuevoCuerpo"></div>
+  </section>
+
+  <!-- ===================== PANTALLA: MAPA DEL SISTEMA SOLAR ===================== -->
+  <section id="p-mapa" class="pantalla" aria-label="Mapa del sistema solar">
+    <header class="barra barra-mapa">
+      <button class="btn btn-icono btn-perfil" id="btnPerfil" type="button" aria-label="Cambiar de explorador"><span class="emo" id="mapaAvatar">🦊</span></button>
+      <span class="chip chip-estrellas" aria-label="Estrellas"><span class="chip-ico">⭐</span><b class="hudEstrellas">0</b></span>
+      <span class="chip chip-rango" id="chipRango" aria-label="Rango"><span class="chip-ico" id="rangoIco">🔰</span></span>
+      <span class="chip chip-viaje" aria-label="Planetas completados"><span class="chip-ico">🪐</span><b id="viajeCuenta">0/10</b></span>
+      <span class="hueco-flex"></span>
+      <button id="btnPadres" class="btn btn-icono btn-padres" type="button" aria-label="Zona de padres: mantén pulsado 3 segundos">
+        <svg class="anillo-carga" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46"/></svg>
+        <span class="ico" data-icono="engranaje"></span>
+      </button>
+    </header>
+    <div class="mapa-zona desplazable" id="mapaZona">
+      <div class="mapa-pista" id="mapaPista">
+        <svg id="mapaOrbitas" class="mapa-orbitas" aria-hidden="true"></svg>
+        <div id="mapaNodos"></div>
+        <div id="naveMapa" class="nave-mapa" aria-hidden="true"></div>
+      </div>
+    </div>
+    <nav class="menu-mapa" aria-label="Menú">
+      <button id="btnMisiones" class="btn btn-menu" type="button" style="--c:var(--sol);--c-osc:var(--sol-osc)" aria-label="Misiones de hoy"><span class="emo">📋</span><span class="insignia-menu" id="insigniaMisiones" hidden></span></button>
+      <button id="btnAlbum" class="btn btn-menu" type="button" style="--c:var(--celeste);--c-osc:var(--celeste-osc)" aria-label="Álbum"><span class="emo">📒</span></button>
+      <button id="btnTaller" class="btn btn-menu" type="button" style="--c:var(--chicle);--c-osc:var(--chicle-osc)" aria-label="Taller: Pipo y la nave"><span class="emo">🛠️</span></button>
+    </nav>
+  </section>
+
+  <!-- ===================== PANTALLA: UN MUNDO (sus 6 niveles) ===================== -->
+  <section id="p-mundo" class="pantalla" aria-label="Planeta">
+    <header class="barra">
+      <button class="btn btn-icono" id="btnMundoVolver" type="button" aria-label="Volver al mapa"><span class="ico" data-icono="mapa"></span></button>
+      <span class="chip chip-estrellas" aria-label="Estrellas"><span class="chip-ico">⭐</span><b class="hudEstrellas">0</b></span>
+      <span class="chip mundo-titulo" id="mundoTitulo"></span>
+    </header>
+    <div class="mundo-planeta" id="mundoPlaneta" aria-hidden="true"></div>
+    <div class="mundo-camino" id="mundoCamino"></div>
+    <div class="mundo-extras" id="mundoExtras"></div>
+  </section>
+
+  <!-- ===================== PANTALLA: DESCUBRE EL PLANETA ===================== -->
+  <section id="p-descubre" class="pantalla" aria-label="Descubre el planeta">
+    <header class="barra">
+      <button class="btn btn-icono" id="btnDescubreSalir" type="button" aria-label="Salir"><span class="ico" data-icono="cerrar"></span></button>
+      <div class="descubre-puntos" id="descubrePuntos"></div>
+    </header>
+    <div class="descubre-dibujo" id="descubreDibujo"></div>
+    <div class="descubre-pie">
+      <div class="pipo-slot descubre-pipo tocable" data-slot="descubre"></div>
+      <button id="btnDescubreSeguir" class="btn btn-grande btn-ok" type="button" aria-label="Seguir"><span class="ico" data-icono="siguiente"></span></button>
+    </div>
+  </section>
+
+  <!-- ===================== PANTALLA: JUEGO ===================== -->
+  <section id="p-juego" class="pantalla" aria-label="Juego">
+    <header class="barra barra-juego">
+      <button id="btnPausa" class="btn btn-icono" type="button" aria-label="Pausa"><span class="ico" data-icono="pausa"></span></button>
+      <div class="combustible" id="combustible" aria-label="Progreso del nivel"></div>
+    </header>
+    <div class="guia">
+      <div class="pipo-slot guia-pipo tocable" data-slot="juego"></div>
+      <div class="picto" id="picto" aria-hidden="true"></div>
+    </div>
+    <main class="escena" id="escena"></main>
+    <div class="respuestas" id="respuestas"></div>
+  </section>
+
+  <!-- ===================== PANTALLA: PREMIO ===================== -->
+  <section id="p-premio" class="pantalla" aria-label="Premio">
+    <div class="premio-centro" id="premioCentro">
+      <div class="premio-rayos" aria-hidden="true"></div>
+      <div class="premio-estrellas-nivel" id="premioEstrellasNivel"></div>
+      <button id="btnRegalo" class="regalo" type="button" aria-label="Abrir el regalo"></button>
+      <div class="premio-revelado" id="premioRevelado" hidden></div>
+    </div>
+    <div class="premio-pie">
+      <div class="pipo-slot premio-pipo tocable" data-slot="premio"></div>
+      <button id="btnPremioSeguir" class="btn btn-grande btn-ok" type="button" aria-label="Seguir" hidden><span class="ico" data-icono="siguiente"></span></button>
+    </div>
+  </section>
+
+  <!-- ===================== PANTALLA: ÁLBUM ===================== -->
+  <section id="p-album" class="pantalla" aria-label="Álbum">
+    <header class="barra">
+      <button class="btn btn-icono btn-volver" type="button" aria-label="Volver al mapa"><span class="ico" data-icono="atras"></span></button>
+      <div class="pestanas-album">
+        <button class="btn pestana" type="button" data-tab="cartas" aria-label="Cartas del espacio"><span class="emo">🃏</span></button>
+        <button class="btn pestana" type="button" data-tab="pegatinas" aria-label="Pegatinas"><span class="emo">⭐</span></button>
+      </div>
+      <span class="chip"><b id="albumCuenta">0/20</b></span>
+    </header>
+    <div class="coleccion desplazable" id="albumRejilla"></div>
+  </section>
+
+  <!-- ===================== PANTALLA: TALLER (Pipo y la nave) ===================== -->
+  <section id="p-taller" class="pantalla" aria-label="Taller">
+    <header class="barra">
+      <button class="btn btn-icono btn-volver" type="button" aria-label="Volver al mapa"><span class="ico" data-icono="atras"></span></button>
+      <span class="chip chip-estrellas" aria-label="Estrellas"><span class="chip-ico">⭐</span><b class="hudEstrellas">0</b></span>
+    </header>
+    <div class="taller-vista" id="tallerVista"></div>
+    <div class="tienda-panel">
+      <div class="tienda-pestanas" role="tablist">
+        <button class="btn pestana activa" type="button" data-tab="colores" aria-label="Colores de Pipo"><span class="emo">🎨</span></button>
+        <button class="btn pestana" type="button" data-tab="accesorios" aria-label="Complementos de Pipo"><span class="emo">👑</span></button>
+        <button class="btn pestana" type="button" data-tab="nave" aria-label="La nave"><span class="emo">🚀</span></button>
+      </div>
+      <div class="tienda-items desplazable" id="tiendaItems"></div>
+    </div>
+  </section>
+
+  <!-- ===================== CAPA: DESPEGUE DEL COHETE ===================== -->
+  <div id="c-despegue" class="capa capa-despegue" hidden aria-hidden="true">
+    <div class="cohete-grande" id="coheteGrande"></div>
+  </div>
+
+  <!-- ===================== CAPA: CARTA NUEVA / PREMIO ESPECIAL ===================== -->
+  <div id="c-carta" class="capa capa-carta" hidden>
+    <div class="carta-nueva" id="cartaNueva"></div>
+  </div>
+
+  <!-- ===================== CAPA: MISIONES DEL DÍA ===================== -->
+  <div id="c-misiones" class="capa" hidden>
+    <div class="tarjeta-capa tarjeta-misiones">
+      <div class="misiones-lista" id="misionesLista"></div>
+      <div class="cofre-semana" id="cofreSemana"></div>
+      <button id="btnMisionesCerrar" class="btn btn-grande btn-ok" type="button" aria-label="Cerrar"><span class="ico" data-icono="check"></span></button>
+    </div>
+  </div>
+
+  <!-- ===================== CAPA: RETO EN CASA ===================== -->
+  <div id="c-casa" class="capa" hidden>
+    <div class="tarjeta-capa tarjeta-casa">
+      <div class="casa-icono emo" id="casaIcono">🏠</div>
+      <p class="casa-texto" id="casaTexto"></p>
+      <div class="fila-botones">
+        <button id="btnCasaOir" class="btn btn-grande" type="button" style="--c:var(--celeste);--c-osc:var(--celeste-osc)" aria-label="Escuchar otra vez"><span class="ico" data-icono="altavoz"></span></button>
+        <button id="btnCasaHecho" class="btn btn-grande btn-ok btn-mantener" type="button" aria-label="Un adulto mantiene pulsado para confirmar">
+          <svg class="anillo-carga" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46"/></svg>
+          <span class="ico" data-icono="check"></span>
+        </button>
+        <button id="btnCasaCerrar" class="btn btn-grande" type="button" style="--c:var(--lila);--c-osc:var(--lila-osc)" aria-label="Cerrar"><span class="ico" data-icono="cerrar"></span></button>
+      </div>
+      <p class="casa-nota">Adulto: mantén pulsado ✔ 3 segundos cuando lo hayáis hecho.</p>
+    </div>
+  </div>
+
+  <!-- ===================== CAPA: CALMA (respirar o más fácil) ===================== -->
+  <div id="c-calma" class="capa" hidden>
+    <div class="tarjeta-capa">
+      <div class="calma-circulo" id="calmaCirculo"><div class="pipo-slot capa-pipo" data-slot="calma"></div></div>
+      <div class="fila-botones" id="calmaBotones">
+        <button id="btnRespirar" class="btn btn-grande" type="button" style="--c:var(--celeste);--c-osc:var(--celeste-osc)" aria-label="Respirar juntos"><span class="emo">🌬️</span></button>
+        <button id="btnMasFacil" class="btn btn-grande btn-ok" type="button" aria-label="Algo más fácil"><span class="emo">🙂</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== CAPA: PAUSA ===================== -->
+  <div id="c-pausa" class="capa" hidden>
+    <div class="tarjeta-capa">
+      <div class="pipo-slot capa-pipo" data-slot="pausa"></div>
+      <div class="fila-botones">
+        <button id="btnSeguir" class="btn btn-grande btn-ok" type="button" aria-label="Seguir jugando"><span class="ico" data-icono="jugar"></span></button>
+        <button id="btnIrMapa" class="btn btn-grande" type="button" style="--c:var(--celeste);--c-osc:var(--celeste-osc)" aria-label="Volver al planeta"><span class="ico" data-icono="mapa"></span></button>
+        <button id="btnMusicaPausa" class="btn btn-grande" type="button" style="--c:var(--chicle);--c-osc:var(--chicle-osc)" aria-label="Música sí o no"><span class="ico" data-icono="musica"></span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== CAPA: DESCANSO ===================== -->
+  <div id="c-descanso" class="capa" hidden>
+    <div class="tarjeta-capa">
+      <div class="pipo-slot capa-pipo" data-slot="descanso"></div>
+      <div class="fila-botones" id="descansoBotones">
+        <button id="btnDescansar" class="btn btn-grande" type="button" style="--c:var(--lila);--c-osc:var(--lila-osc)" aria-label="Descansar"><span class="emo">😴</span></button>
+        <button id="btnSeguirJugando" class="btn btn-grande btn-ok" type="button" aria-label="Seguir un poco más"><span class="ico" data-icono="jugar"></span></button>
+        <button id="btnDescansoPadres" class="btn btn-grande btn-padres" type="button" aria-label="Adulto: mantén pulsado 3 segundos" hidden>
+          <svg class="anillo-carga" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46"/></svg>
+          <span class="ico" data-icono="engranaje"></span>
+        </button>
+      </div>
+      <p class="casa-nota" id="descansoNota" hidden>Adulto: mantén pulsado ⚙️ 3 segundos para seguir jugando.</p>
+    </div>
+  </div>
+
+  <!-- ===================== CAPA: ZONA DE PADRES ===================== -->
+  <div id="c-padres" class="capa capa-padres" hidden>
+    <div class="panel-padres desplazable" role="dialog" aria-label="Zona de padres">
+      <div class="padres-cabecera">
+        <h2>Zona de padres</h2>
+        <button id="btnCerrarPadres" class="btn btn-icono" type="button" style="--c:var(--tinta);--c-osc:#000" aria-label="Cerrar"><span class="ico" data-icono="cerrar"></span></button>
+      </div>
+      <div id="padresContenido"></div>
+    </div>
+  </div>
+
+  <!-- ===================== ELEMENTOS GLOBALES ===================== -->
+  <button id="btnRepetir" class="btn btn-icono btn-repetir" type="button" aria-label="Repetir lo que dijo Pipo" hidden>
+    <span class="ico" data-icono="altavoz"></span>
+    <span class="aviso-voz" id="avisoVoz" hidden>!</span>
+  </button>
+  <div id="subtitulo" class="subtitulo" aria-live="polite" hidden></div>
+  <div id="aviso" class="aviso" aria-live="polite"></div>
+  <div id="mano" class="mano" aria-hidden="true" hidden><span class="mano-onda"></span><span class="mano-dedo">👆</span></div>
+  <canvas id="confeti" aria-hidden="true"></canvas>
+  <div id="resultadoPruebas" class="resultado-pruebas" hidden></div>
+</div>
