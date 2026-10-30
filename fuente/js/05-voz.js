@@ -102,12 +102,12 @@ const Voz = {
 
   /* Texto de unas partes (para subtítulos y para la voz del dispositivo) */
   texto(partes) {
-    const ids = partes.filter(id => typeof FRASES !== 'undefined' && FRASES[id]);
+    const ids = aplanar([partes]).filter(id => typeof FRASES !== 'undefined' && FRASES[id]);
     const textos = ids.map(id => FRASES[id]);
     return textos.map((t, i) => {
       const sig = textos[i + 1];
       if (sig && /^[a-záéíóúñü]/.test(sig) && /\.$/.test(t)) t = t.slice(0, -1);
-      if (i > 0 && /^(n\d+|o_)/.test(ids[i])) t = t.charAt(0).toLowerCase() + t.slice(1);
+      if (i > 0 && /^(n\d+|o_|fr_)/.test(ids[i])) t = t.charAt(0).toLowerCase() + t.slice(1);
       return t;
     }).join(' ');
   },
@@ -131,8 +131,7 @@ const Voz = {
   decir(partes, op) {
     op = op || {};
     if (!partes) return Promise.resolve();
-    if (!Array.isArray(partes)) partes = [partes];
-    partes = partes.filter(Boolean);
+    partes = aplanar([partes]);
     if (MODO_PRUEBA) Pruebas.revisarFrases(partes);
     if (!partes.length) return Promise.resolve();
     if (op.instruccion) this.instruccion = partes;
@@ -197,7 +196,7 @@ const Voz = {
   precargar(partes) {
     const modo = this.modo();
     if (modo === 'sistema') return;
-    (partes || []).forEach(id => { if (id) this.buffer(modo, id); });
+    aplanar([partes]).forEach(id => this.buffer(modo, id));
   },
 
   async reproducir(partes, tk, op) {

@@ -35,13 +35,13 @@
     <div class="nuevo-cuerpo" id="nuevoCuerpo"></div>
   </section>
 
-  <!-- ===================== PANTALLA: MAPA DEL SISTEMA SOLAR ===================== -->
-  <section id="p-mapa" class="pantalla" aria-label="Mapa del sistema solar">
+  <!-- ===================== PANTALLA: MAPA DEL VIAJE ===================== -->
+  <section id="p-mapa" class="pantalla" aria-label="Mapa del viaje">
     <header class="barra barra-mapa">
       <button class="btn btn-icono btn-perfil" id="btnPerfil" type="button" aria-label="Cambiar de explorador"><span class="emo" id="mapaAvatar">🦊</span></button>
       <span class="chip chip-estrellas" aria-label="Estrellas"><span class="chip-ico">⭐</span><b class="hudEstrellas">0</b></span>
       <span class="chip chip-rango" id="chipRango" aria-label="Rango"><span class="chip-ico" id="rangoIco">🔰</span></span>
-      <span class="chip chip-viaje" aria-label="Planetas completados"><span class="chip-ico">🪐</span><b id="viajeCuenta">0/10</b></span>
+      <span class="chip chip-nivel" id="chipNivel" aria-label="Nivel por edad">5-6</span>
       <span class="hueco-flex"></span>
       <button id="btnPadres" class="btn btn-icono btn-padres" type="button" aria-label="Zona de padres: mantén pulsado 3 segundos">
         <svg class="anillo-carga" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46"/></svg>
@@ -49,17 +49,22 @@
       </button>
     </header>
     <div class="mapa-zona desplazable" id="mapaZona">
-      <div class="mapa-pista" id="mapaPista">
-        <svg id="mapaOrbitas" class="mapa-orbitas" aria-hidden="true"></svg>
-        <div id="mapaNodos"></div>
-        <div id="naveMapa" class="nave-mapa" aria-hidden="true"></div>
+      <div class="lienzo-marco">
+        <div class="mapa-lienzo" id="mapaLienzo">
+          <svg id="mapaRuta" class="ruta-svg" aria-hidden="true"></svg>
+          <div id="mapaNodos"></div>
+          <div id="naveMapa" class="nave-mapa" aria-hidden="true"></div>
+        </div>
       </div>
     </div>
     <nav class="menu-mapa" aria-label="Menú">
-      <button id="btnMisiones" class="btn btn-menu" type="button" style="--c:var(--sol);--c-osc:var(--sol-osc)" aria-label="Misiones de hoy"><span class="emo">📋</span><span class="insignia-menu" id="insigniaMisiones" hidden></span></button>
-      <button id="btnAlbum" class="btn btn-menu" type="button" style="--c:var(--celeste);--c-osc:var(--celeste-osc)" aria-label="Álbum"><span class="emo">📒</span></button>
-      <button id="btnTaller" class="btn btn-menu" type="button" style="--c:var(--chicle);--c-osc:var(--chicle-osc)" aria-label="Taller: Pipo y la nave"><span class="emo">🛠️</span></button>
+      <button id="btnMisiones" class="btn btn-menu" type="button" style="--c:var(--sol);--c-osc:var(--sol-osc)" aria-label="Misiones de hoy"><span class="emo">📋</span><span class="menu-txt">Misiones</span><span class="insignia-menu" id="insigniaMisiones" hidden></span></button>
+      <button id="btnAlbum" class="btn btn-menu" type="button" style="--c:var(--celeste);--c-osc:var(--celeste-osc)" aria-label="Álbum"><span class="emo">📒</span><span class="menu-txt">Álbum</span></button>
+      <button id="btnTaller" class="btn btn-menu" type="button" style="--c:var(--chicle);--c-osc:var(--chicle-osc)" aria-label="Taller: Pipo y la nave"><span class="emo">🛠️</span><span class="menu-txt">Taller</span></button>
     </nav>
+    <button id="btnSeguirViaje" class="btn btn-viaje" type="button" aria-label="Seguir la aventura">
+      <span class="bv-mini" id="seguirIco"></span><span class="ico bv-jugar" data-icono="jugar"></span>
+    </button>
   </section>
 
   <!-- ===================== PANTALLA: UN MUNDO (sus 6 niveles) ===================== -->
@@ -69,9 +74,19 @@
       <span class="chip chip-estrellas" aria-label="Estrellas"><span class="chip-ico">⭐</span><b class="hudEstrellas">0</b></span>
       <span class="chip mundo-titulo" id="mundoTitulo"></span>
     </header>
-    <div class="mundo-planeta" id="mundoPlaneta" aria-hidden="true"></div>
-    <div class="mundo-camino" id="mundoCamino"></div>
+    <div class="mundo-zona desplazable" id="mundoZona">
+      <div class="lienzo-marco">
+        <div class="mundo-lienzo" id="mundoLienzo">
+          <div class="mundo-planeta" id="mundoPlaneta" aria-hidden="true"></div>
+          <svg id="mundoRuta" class="ruta-svg" aria-hidden="true"></svg>
+          <div class="mundo-camino" id="mundoCamino"></div>
+        </div>
+      </div>
+    </div>
     <div class="mundo-extras" id="mundoExtras"></div>
+    <button id="btnJugarNivel" class="btn btn-viaje" type="button" aria-label="Jugar el siguiente nivel">
+      <span class="bv-mini" id="jugarNivelIco"></span><span class="ico bv-jugar" data-icono="jugar"></span>
+    </button>
   </section>
 
   <!-- ===================== PANTALLA: DESCUBRE EL PLANETA ===================== -->

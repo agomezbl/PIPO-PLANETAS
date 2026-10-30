@@ -213,6 +213,7 @@ const Descubre = {
     this.paso = -1;
     this.token++;
     const m = MUNDOS[mundoIdx];
+    UI.tema(m.id);
     Sonido.tema(m.musica);
     $('#p-descubre').style.setProperty('--tema', ASTROS[m.id] ? ASTROS[m.id].c2 : '#9B7BF7');
     UI.mostrar('p-descubre');

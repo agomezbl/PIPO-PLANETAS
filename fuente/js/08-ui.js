@@ -108,10 +108,14 @@ const UI = {
     this.pantalla = id;
     $('#btnRepetir').hidden = (id === 'p-inicio');
     document.body.dataset.pantalla = id;
+    if (['p-inicio', 'p-perfiles', 'p-nuevo', 'p-mapa', 'p-album', 'p-taller'].indexOf(id) >= 0) this.tema(null);
     this.ocultarSubtitulo();
     Mano.ocultar();
     Mascota.hablar(false);
   },
+
+  /* Color del cielo según el planeta en el que estamos */
+  tema(id) { document.body.dataset.tema = id || ''; },
 
   subtitulo(texto) {
     const s = $('#subtitulo');

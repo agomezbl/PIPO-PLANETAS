@@ -34,6 +34,14 @@ for n in range(0, 101):
     f('n%d' % n, cap(palabra(n)) + '.')
 f('un', 'un')
 f('una', 'una')
+# Centenas (versión 4, nivel de 7 a 8 años): "Trescientos." y "trescientos" para componer 342 = trescientos + cuarenta y dos
+CIENTOS = {100: 'ciento', 200: 'doscientos', 300: 'trescientos', 400: 'cuatrocientos', 500: 'quinientos',
+           600: 'seiscientos', 700: 'setecientos', 800: 'ochocientos', 900: 'novecientos'}
+for c, t in CIENTOS.items():
+    if c > 100:
+        f('n%d' % c, cap(t) + '.')
+    f('cc%d' % c, t)
+f('n1000', 'Mil.')
 
 # Toca el número (frase completa hasta 20; a partir de ahí se compone "Toca el" + número)
 for n in range(0, 21):
@@ -529,6 +537,83 @@ for w, t in [('sol', 'Sol.'), ('luna', 'Luna.'), ('nave', 'Nave.'), ('marte', 'M
              ('saturno', 'Saturno.'), ('orbita', 'Órbita.'), ('satelite', 'Satélite.'), ('gravedad', 'Gravedad.'),
              ('astronauta', 'Astronauta.'), ('jupiter', 'Júpiter.'), ('neptuno', 'Neptuno.')]:
     f('w_' + w, t)
+
+# ================================================================ VERSIÓN 4
+# ---------------------------------------------------------------- niveles por edad
+f('elige_nivel', 'Elige tu nivel.')
+f('nivel_56', 'De cinco a seis años.')
+f('nivel_67', 'De seis a siete años.')
+f('nivel_78', 'De siete a ocho años.')
+f('a_jugar', '¡A jugar!')
+f('mision_provisiones', 'Preparamos las provisiones del viaje.')
+f('mision_rocas100', 'Contamos rocas lunares de cien en cien.')
+f('mision_revision', 'Revisamos la carga de la nave.')
+
+# ---------------------------------------------------------------- números hasta mil
+f('placa_cien', 'Cada placa tiene cien.')
+f('de_cien', 'Contamos de cien en cien.')
+f('que_numero_forman', '¿Qué número forman?')
+f('orden_cifras', 'Primero las centenas, luego las decenas y al final las unidades.')
+f('mira_centenas', 'Primero miramos las centenas. Si son iguales, miramos las decenas.')
+f('mira_saltos', 'Mira cuánto salta cada vez.')
+for k in [2, 3, 4, 5, 10, 20, 50, 100]:
+    f('sube_%d' % k, 'Salta de %s en %s.' % (palabra(k), palabra(k)))
+    f('baja_%d' % k, 'Baja de %s en %s.' % (palabra(k), palabra(k)))
+
+# ---------------------------------------------------------------- sumar y restar llevando
+f('sumamos_unidades', 'Primero sumamos las unidades.')
+f('diez_unidades', 'Diez unidades hacen una decena.')
+f('nos_llevamos', 'Nos llevamos una a las decenas.')
+f('ahora_decenas', 'Ahora sumamos las decenas.')
+f('diez_decenas', 'Diez decenas hacen una centena.')
+f('restamos_unidades', 'Primero restamos las unidades.')
+f('no_hay_bastantes', 'No hay bastantes unidades.')
+f('rompemos_decena', 'Cambiamos una decena por diez unidades.')
+f('ahora_restamos_decenas', 'Ahora restamos las decenas.')
+
+# ---------------------------------------------------------------- multiplicar y dividir
+f('tabla_del', 'La tabla del')
+f('veces', 'veces')
+f('filas_de', 'filas de')
+f('contamos_filas', 'Contamos fila a fila.')
+f('orden_igual', 'El orden no importa: el resultado es el mismo.')
+f('hay', 'Hay')
+for k, t in [('bolsas', 'bolsas.'), ('cajas', 'cajas.'), ('naves', 'naves.'), ('platos', 'platos.'), ('cestas', 'cestas.')]:
+    f('c_' + k, t)
+f('en_cada_una', 'En cada una hay')
+f('en_cada_uno', 'En cada uno hay')
+f('repartimos', 'Repartimos')
+f('entre', 'entre')
+f('cuantos_cada', '¿Cuántos le tocan a cada uno?')
+f('multiplicar_es', 'Multiplicar es sumar el mismo número varias veces.')
+
+# ---------------------------------------------------------------- fracciones
+f('que_parte', '¿Qué parte está pintada?')
+for k, t in [('1_2', 'Un medio.'), ('1_3', 'Un tercio.'), ('1_4', 'Un cuarto.'), ('2_3', 'Dos tercios.'), ('3_4', 'Tres cuartos.'), ('2_4', 'Dos cuartos.')]:
+    f('fr_' + k, t)
+f('toca_dibujo_con', 'Toca el dibujo con')
+f('pintado', 'pintado.')
+f('partido_en', 'Está partido en')
+f('partes_iguales', 'partes iguales.')
+f('pintamos', 'Pintamos')
+f('iguales_importa', 'Las partes tienen que ser iguales.')
+f('tercio_de', 'Un tercio de')
+f('cuarto_de', 'Un cuarto de')
+f('reparte_grupos', 'Repartimos en grupos iguales.')
+
+# ---------------------------------------------------------------- el reloj con minutos
+for h in range(1, 13):
+    f('hh_%d' % h, 'la una' if h == 1 else 'las ' + palabra(h))
+for m, t in [(0, 'en punto.'), (5, 'y cinco.'), (10, 'y diez.'), (15, 'y cuarto.'), (20, 'y veinte.'), (25, 'y veinticinco.'), (30, 'y media.'),
+             (35, 'menos veinticinco.'), (40, 'menos veinte.'), (45, 'menos cuarto.'), (50, 'menos diez.'), (55, 'menos cinco.')]:
+    f('m_%02d' % m, t)
+f('aguja_minutos', 'La aguja larga marca los minutos.')
+f('cada_cinco', 'De un número al siguiente pasan cinco minutos.')
+f('pasada_media', 'Después de la media, decimos la hora siguiente menos los minutos que faltan.')
+f('misma_hora', '¿Qué reloj marca la misma hora?')
+
+# ---------------------------------------------------------------- problemas largos
+f('piensa_pasos', 'Lo hacemos paso a paso.')
 
 
 def escribir():

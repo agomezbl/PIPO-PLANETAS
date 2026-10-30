@@ -16,7 +16,7 @@ const Sesion = {
 function habsAnteriores(mundoIdx) {
   const lista = [];
   for (let i = 0; i < mundoIdx; i++) {
-    MUNDOS[i].habs.forEach(h => { if (h !== 'repaso' && lista.indexOf(h) < 0) lista.push(h); });
+    cur(i).habs.forEach(h => { if (h !== 'repaso' && lista.indexOf(h) < 0) lista.push(h); });
   }
   return lista;
 }
@@ -71,6 +71,7 @@ function llenar(base, n) {
 /* Devuelve la lista de habilidades del nivel */
 function planNivel(mundoIdx, tipoId) {
   const m = MUNDOS[mundoIdx];
+  const c = cur(mundoIdx);
   const tipo = TIPOS_NIVEL.find(t => t.id === tipoId);
   const n = tipo.retos;
   let plan;
@@ -79,22 +80,22 @@ function planNivel(mundoIdx, tipoId) {
   if (tipoId === 'aprende') {
     // Bloques: cada habilidad nueva dos veces seguidas (primero guiada)
     plan = [];
-    m.aprende.forEach(h => { plan.push(h, h); });
-    while (plan.length < n) plan.push(elegir(m.aprende));
+    c.aprende.forEach(h => { plan.push(h, h); });
+    while (plan.length < n) plan.push(elegir(c.aprende));
     plan = plan.slice(0, n);
     return plan;
   }
   if (tipoId === 'mision') {
-    const hs = m.mision.habs;
+    const hs = c.mision;
     plan = [];
     for (let i = 0; i < n; i++) plan.push(i % 2 === 0 ? hs[0] : hs[1 + ((i >> 1) % (hs.length - 1))]);
     return plan;
   }
-  let base = m.habs.filter(h => h !== 'repaso');
-  if (tipoId === 'proyecto') base = base.concat(m.mision.habs.filter(h => base.indexOf(h) < 0));
+  let base = c.habs.filter(h => h !== 'repaso');
+  if (tipoId === 'proyecto') base = base.concat(c.mision.filter(h => base.indexOf(h) < 0 && h !== 'ciencia'));
   if (esSol && tipoId === 'proyecto') {
     // Gran desafío final: una habilidad de cada mundo y el orden de los planetas
-    const una = MUNDOS.slice(0, 9).map(w => elegirRepaso(w.habs, 1)[0]);
+    const una = MUNDOS.slice(0, 9).map((w, i) => elegirRepaso(cur(i).habs, 1)[0]);
     plan = barajar(una).concat(['ordenPlanetas']);
     return plan.slice(0, n);
   }
@@ -455,7 +456,7 @@ const Juego = {
     const plan = op.plan || planNivel(mundoIdx, tipoId);
     this.plan = plan.map(x => typeof x === 'string' ? { hab: x } : x);
     this.plan.forEach(x => {
-      x.repaso = MUNDO_DE_HAB[x.hab] < mundoIdx && MUNDOS[mundoIdx].habs.indexOf(x.hab) < 0 && x.hab !== 'ciencia';
+      x.repaso = mundoDeHab(x.hab, nivelDe()) < mundoIdx && cur(mundoIdx).habs.indexOf(x.hab) < 0 && x.hab !== 'ciencia';
       if (x.dif === undefined) x.dif = difPara(x.hab, this.tipo.id, x.repaso);
     });
     this.i = -1;
@@ -470,6 +471,7 @@ const Juego = {
     $('#p-juego').style.setProperty('--tema', ASTROS[m.id] ? ASTROS[m.id].c2 : '#9B7BF7');
     $('#p-juego').dataset.tipo = this.tipo.id;
     Sonido.tema(m.musica);
+    UI.tema(m.id);
     UI.mostrar('p-juego');
     this.pintarProgreso();
     this.vigilarAyuda();
@@ -537,7 +539,7 @@ const Juego = {
     if (conIntro) {
       if (this.modo === 'nivel') {
         const m = MUNDOS[this.mundo];
-        if (this.tipo.id === 'mision') intro.push('mision_' + m.mision.id);
+        if (this.tipo.id === 'mision') intro.push(cur(this.mundo).misionFrase || 'mision_' + m.mision.id);
         else if (this.tipo.id === 'proyecto') intro.push('proyecto_' + m.id);
         else if (m.id === 'sol' && this.tipo.id === 'practica') intro.push('nivel_repaso');
         else if (this.tipo.frase && this.tipo.id !== 'descubre') intro.push(this.tipo.frase);

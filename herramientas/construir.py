@@ -81,7 +81,7 @@ def leer(ruta):
 
 def construir_html():
     frases.escribir()
-    css = leer('fuente/estilos.css') + '\n' + leer('fuente/estilos-v3.css')
+    css = '\n'.join(leer(n) for n in ['fuente/estilos.css', 'fuente/estilos-v3.css', 'fuente/estilos-v4.css'])
     cuerpo = leer('fuente/cuerpo.html')
     carpeta = os.path.join(RAIZ, 'fuente', 'js')
     js = '\n'.join(leer(os.path.join('fuente', 'js', n)) for n in sorted(os.listdir(carpeta)) if n.endswith('.js'))
@@ -106,7 +106,7 @@ def construir_html():
             '<meta name="mobile-web-app-capable" content="yes">\n'
             '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n'
             '<meta name="apple-mobile-web-app-title" content="Pipo">\n'
-            '<meta name="description" content="Pipo y los Planetas: aventura por el sistema solar para aprender matemáticas y ciencia (5 a 7 años).">\n'
+            '<meta name="description" content="Pipo y los Planetas: aventura por el sistema solar para aprender matemáticas y ciencia (de 5 a 8 años).">\n'
             '<title>Pipo y los Planetas</title>\n'
             '<link rel="icon" href="data:image/svg+xml,' + ICONO + '">\n'
             '<link rel="apple-touch-icon" href="data:image/svg+xml,' + ICONO + '">\n'

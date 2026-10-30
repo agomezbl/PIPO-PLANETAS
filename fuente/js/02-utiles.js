@@ -25,7 +25,19 @@ const esperar = ms => new Promise(resolver => setTimeout(resolver, ms));
 const T = ms => (MODO_PRUEBA && typeof Pruebas !== 'undefined' && Pruebas.rapido ? Math.min(ms, 20) : ms);
 const limitar = (v, min, max) => Math.max(min, Math.min(max, v));
 const rango = (a, b) => { const r = []; for (let i = a; i <= b; i++) r.push(i); return r; };
-const N = n => 'n' + n;   // id de la frase grabada de un número
+/* Id de la frase grabada de un número. Hasta 100 (y las centenas exactas) hay una frase;
+   el resto se compone: 342 = «trescientos» + «cuarenta y dos». */
+const N = n => {
+  n = Math.round(Number(n));
+  if (n <= 100 || n > 1000 || n % 100 === 0) return 'n' + n;
+  return ['cc' + (Math.floor(n / 100) * 100), 'n' + (n % 100)];
+};
+/* Aplana listas de frases (algunas partes, como N(342), son a su vez listas) */
+function aplanar(lista) {
+  const r = [];
+  (function meter(x) { if (Array.isArray(x)) x.forEach(meter); else if (x !== undefined && x !== null && x !== false && x !== '') r.push(x); })(lista);
+  return r;
+}
 
 function barajar(lista) {
   const copia = lista.slice();

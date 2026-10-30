@@ -141,7 +141,8 @@ const Padres = {
     // Tabla de dominio por mundo
     h += '<h3 class="pp-sub">Dominio por habilidad</h3><p class="pp-nota">Dominada = 80 % de aciertos a la primera en los últimos 10 intentos.</p><table class="pp-tabla"><tr><th>Mundo</th><th>Habilidad</th><th>Dominio</th><th>Grado</th></tr>';
     MUNDOS.forEach((m, i) => {
-      const habs = m.habs.concat(m.mision.habs).filter((x, j, a) => a.indexOf(x) === j && HABILIDADES[x] && x !== 'repaso');
+      const c = cur(i, nivelDe(p));
+      const habs = c.habs.concat(c.mision).filter((x, j, a) => a.indexOf(x) === j && HABILIDADES[x] && x !== 'repaso');
       habs.forEach((k, j) => {
         const hh = p.habs[k];
         const d = dominio(hh);
@@ -161,11 +162,13 @@ const Padres = {
     const a = Guardado.datos.ajustes;
     let h = '<div class="pp-seccion"><div class="pp-fila"><label for="ppNombre">Nombre (lo verán los adultos; Pipo usa el apodo del animal)</label><input id="ppNombre" class="pp-input" type="text" maxlength="24" value="' + escapar(p.nombre) + '" placeholder="' + avatarDe(p).apodo + '"></div>';
     h += '<div class="pp-fila"><span>Animal</span><div class="segmentos">' + AVATARES.map(x => '<button class="seg seg-emo' + (x.id === p.avatar ? ' activo' : '') + '" data-avatar="' + x.id + '" type="button" aria-label="' + x.apodo + '">' + x.e + '</button>').join('') + '</div></div>';
-    h += '<div class="pp-fila"><span>Edad</span><div class="segmentos">' + [5, 6, 7].map(e => '<button class="seg' + (p.edad === e ? ' activo' : '') + '" data-edad="' + e + '" type="button">' + e + ' años</button>').join('') + '</div></div>';
+    const nv = NIVEL[nivelDe(p)];
+    h += '<div class="pp-fila pp-fila-nivel"><span>Nivel</span><div class="segmentos">' + NIVELES.map(n => '<button class="seg seg-nivel' + (n.id === nv.id ? ' activo' : '') + '" data-banda="' + n.id + '" type="button" style="--c:' + n.color + '">' + n.edades + ' años</button>').join('') + '</div></div>' +
+      '<p class="pp-nota"><b>' + nv.nombre + ':</b> ' + nv.resumen + ' Al cambiar de nivel se conserva todo lo conseguido; si queréis empezar el viaje desde la Tierra, usad «Reiniciar el progreso».</p>';
     h += '<div class="pp-fila"><span>Voz de Pipo</span><div class="pp-voces">' + VOCES_PIPO.map(v => '<button class="tarjeta-voz' + (p.voz === v.id ? ' elegida' : '') + '" data-voz="' + v.id + '" type="button"><span class="tv-emo">' + v.icono + '</span><span class="tv-nombre">' + v.nombre + '</span><span class="tv-sistema">' + escapar(Voz.describir(v.id)) + '</span></button>').join('') + '</div></div></div>';
     h += '<div class="pp-seccion"><h3>Mundos</h3><p class="pp-nota">Mundos abiertos enteros: ' + p.libres + '. Mundo más lejano disponible: ' + p.desbloqueados + '.</p>' +
       '<div class="pp-fila"><span>Abrir hasta el mundo</span><div class="segmentos">' + MUNDOS.map((m, i) => '<button class="seg" data-abrir="' + (i + 1) + '" type="button">' + (i + 1) + '</button>').join('') + '</div></div>' +
-      '<div class="pp-fila"><span>Prueba inicial</span><button class="btn-texto-pp" data-accion="prueba" type="button">Repetir la prueba inicial</button></div></div>';
+      '<h3 class="pp-sub">Qué se aprende en cada planeta (' + nv.edades + ' años)</h3><ul class="pp-lista pp-temas">' + MUNDOS.map((m, i) => '<li><b>' + (i + 1) + '. ' + m.nombre + ':</b> ' + cur(i, nv.id).tema + '</li>').join('') + '</ul></div>';
     h += '<div class="pp-seccion"><h3>Borrar</h3><div class="pp-fila"><button class="btn-texto-pp btn-peligro" data-accion="reiniciar" type="button">Reiniciar el progreso de ' + escapar(p.nombre || avatarDe(p).apodo) + '</button>' +
       '<button class="btn-texto-pp btn-peligro" data-accion="borrar" type="button">Borrar este perfil</button></div><p class="pp-nota">Hay que pulsar dos veces para confirmar.</p></div>';
     return h;
@@ -188,7 +191,9 @@ const Padres = {
 
   htmlAyuda() {
     return '<div class="pp-seccion"><h3>Cómo funciona</h3><ul class="pp-lista">' +
+      '<li>Tres niveles por edad: de 5 a 6, de 6 a 7 y de 7 a 8 años. Se elige al crear el explorador y se puede cambiar en «Perfil». Los planetas, la ciencia y los premios son los mismos; cambian las matemáticas.</li>' +
       '<li>10 mundos en el orden del viaje: Tierra, Luna, Marte, Venus, Mercurio, Júpiter, Saturno, Urano, Neptuno y el Sol. Cada uno tiene 6 niveles (Aprende, Practica, Misión, Descubre, Reto y Gran misión) y un reto para hacer en casa.</li>' +
+      '<li>El botón grande de jugar del mapa lleva directamente al siguiente nivel pendiente.</li>' +
       '<li>La dificultad se adapta sola: sube tras 3 aciertos seguidos a la primera y baja tras un error.</li>' +
       '<li>Ayudas escalonadas: Pipo repite más despacio, luego da una pista visual y, si hace falta, lo resuelve paso a paso y propone una pregunta parecida.</li>' +
       '<li>El progreso se guarda en este navegador y en este dispositivo. Si borráis los datos del navegador, se pierde.</li>' +
@@ -213,10 +218,9 @@ const Padres = {
     const nombre = $('#ppNombre', c);
     if (nombre) nombre.addEventListener('input', () => { p.nombre = nombre.value.slice(0, 24); Guardado.guardarLuego(); });
     $$('[data-avatar]', c).forEach(b => b.addEventListener('click', () => { p.avatar = b.dataset.avatar; Guardado.guardar(); this.pintar(); }));
-    $$('[data-edad]', c).forEach(b => b.addEventListener('click', () => { p.edad = Number(b.dataset.edad); Guardado.guardar(); this.pintar(); }));
+    $$('[data-banda]', c).forEach(b => b.addEventListener('click', () => { Guardado.cambiarNivel(p, b.dataset.banda); UI.aviso('🎓', NIVEL[p.banda].nombre); this.pintar(); }));
     $$('[data-voz]', c).forEach(b => b.addEventListener('click', () => { p.voz = b.dataset.voz; Guardado.guardar(); Voz.avisar(); Voz.probar(p.voz); this.pintar(); }));
     $$('[data-abrir]', c).forEach(b => b.addEventListener('click', () => { Guardado.abrirHasta(p, Number(b.dataset.abrir) - 1); UI.aviso('🔓', 'Abierto hasta el mundo ' + b.dataset.abrir); this.pintar(); }));
-    $$('[data-accion="prueba"]', c).forEach(b => b.addEventListener('click', () => { p.pruebaHecha = false; Guardado.guardar(); this.abierto = false; $('#c-padres').hidden = true; Prueba.empezar(); }));
     $$('[data-accion="reiniciar"], [data-accion="borrar"]', c).forEach(b => b.addEventListener('click', () => {
       if (!b.classList.contains('confirmar')) { b.classList.add('confirmar'); b.textContent = '¿Seguro? Pulsa otra vez'; return; }
       if (b.dataset.accion === 'reiniciar') Guardado.reiniciarPerfil(p);

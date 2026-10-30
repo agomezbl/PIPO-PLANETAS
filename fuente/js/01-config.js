@@ -1,7 +1,8 @@
 'use strict';
 /* =========================================================
-   PIPO Y LOS PLANETAS 3 — Aventura por el sistema solar
-   Matemáticas, ciencia y vida práctica para niños de 5 a 7 años.
+   PIPO Y LOS PLANETAS 4 — Aventura por el sistema solar
+   Matemáticas, ciencia y vida práctica para niños de 5 a 8 años
+   (tres niveles: de 5 a 6, de 6 a 7 y de 7 a 8 años).
    Un único archivo: sin librerías, sin anuncios, sin compras
    y sin recoger datos. Voces naturales grabadas dentro del archivo.
 
@@ -14,9 +15,10 @@
     5. Voz (clips naturales + voz del dispositivo de reserva)
     6. Mascota (Pipo en SVG)
     7. Dibujos: planetas, nave, monedas, relojes...
+   7b. Dibujos propios que sustituyen a los emojis
     8. Interfaz común (iconos, mano guía, avisos, confeti)
     9. Motor del juego: plan de nivel, dominio, pistas
-   10. Actividades de matemáticas (una por habilidad)
+   10. Actividades de matemáticas (una por habilidad; 10d = nivel de 7 a 8 años)
    11. Ciencia: descubre el planeta, preguntas y álbum de cartas
    12. Pantallas: inicio, perfiles, prueba inicial, mapa y mundo
    13. Premios: resultado, despegue, nave, armario, misiones, logros
@@ -28,7 +30,7 @@
 /* =========================================================
    1. CONFIGURACIÓN Y DATOS
    ========================================================= */
-const VERSION = '3.0';
+const VERSION = '4.0';
 const CLAVE_GUARDADO = 'pipo-planetas-v3';
 const ACIERTOS_PARA_SUBIR = 3;    // aciertos seguidos a la primera para subir la dificultad de una habilidad
 const DIFICULTAD_MAX = 2;         // grados internos 0 (fácil), 1 (medio) y 2 (difícil)
@@ -64,100 +66,80 @@ const NOMBRE_TIPO = { aprende: 'Aprende', practica: 'Practica', mision: 'Misión
    El mapa dibuja el sistema solar en su orden real; el número de cada planeta es el orden del viaje. */
 const MUNDOS = [
   {
-    id: 'tierra', nombre: 'Tierra', edad: 5, tema: 'Números hasta 10, más y menos, formas',
-    habs: ['contar', 'dame', 'fogonazo', 'dedos', 'tocaNumero', 'grupoNumero', 'comparar', 'formas', 'buscaTodas'],
-    aprende: ['contar', 'tocaNumero', 'formas'],
-    mision: { id: 'mochila', icono: '🎒', habs: ['mochila', 'contar', 'grupoNumero'], nombre: 'La mochila del astronauta' },
+    id: 'tierra', nombre: 'Tierra',
+    mision: { id: 'mochila', icono: '🎒', nombre: 'La mochila del astronauta' },
     proyecto: { icono: '🏗️', nombre: 'La base de lanzamiento' },
     casa: { icono: '🔵', nombre: 'Busca 5 cosas redondas en casa' },
     pieza: 'punta', cartas: ['tierra', 'astronauta'],
     musica: { escala: 'mayor', tono: 0, tempo: 92, semilla: 11 }
   },
   {
-    id: 'luna', nombre: 'Luna', edad: 5, tema: 'Hasta 20, sumar hasta 10 y series',
-    habs: ['numero20', 'marcos', 'sumas', 'llenar', 'patrones'],
-    aprende: ['marcos', 'sumas', 'patrones'],
-    mision: { id: 'rocas', icono: '🧺', habs: ['rocas', 'llenar', 'marcos'], nombre: 'Rocas lunares' },
+    id: 'luna', nombre: 'Luna',
+    mision: { id: 'rocas', icono: '🧺', nombre: 'Rocas lunares' },
     proyecto: { icono: '🛖', nombre: 'Una base en la Luna' },
     casa: { icono: '🌙', nombre: 'Mirar la Luna por la noche' },
     pieza: 'ventana', cartas: ['luna', 'cohete'],
     musica: { escala: 'pentatonica', tono: -3, tempo: 84, semilla: 23 }
   },
   {
-    id: 'marte', nombre: 'Marte', edad: 5, tema: 'Restar hasta 10, antes y después, medir',
-    habs: ['revienta', 'quitar', 'secuencias', 'medir', 'largo'],
-    aprende: ['revienta', 'secuencias', 'medir'],
-    mision: { id: 'robot', icono: '📏', habs: ['medir', 'largo', 'quitar'], nombre: 'El robot explorador' },
+    id: 'marte', nombre: 'Marte',
+    mision: { id: 'robot', icono: '📏', nombre: 'El robot explorador' },
     proyecto: { icono: '🏠', nombre: 'Una casa en Marte' },
     casa: { icono: '✋', nombre: 'Medir la cama con palmos' },
     pieza: 'alas', cartas: ['marte', 'robot'],
     musica: { escala: 'mixolidia', tono: 2, tempo: 98, semilla: 37 }
   },
   {
-    id: 'venus', nombre: 'Venus', edad: 6, tema: 'Hasta 50: decenas, saltos, pares e impares',
-    habs: ['numero50', 'decenas', 'haceNumero', 'saltos', 'pares'],
-    aprende: ['decenas', 'saltos', 'pares'],
-    mision: { id: 'cajas', icono: '📦', habs: ['haceNumero', 'decenas', 'saltos'], nombre: 'Cajas de diez' },
+    id: 'venus', nombre: 'Venus',
+    mision: { id: 'cajas', icono: '📦', nombre: 'Cajas de diez' },
     proyecto: { icono: '🎈', nombre: 'El globo explorador' },
     casa: { icono: '🫘', nombre: 'Hacer montones de diez' },
     pieza: 'motor', cartas: ['venus', 'lucero'],
     musica: { escala: 'lidia', tono: 4, tempo: 90, semilla: 41 }
   },
   {
-    id: 'mercurio', nombre: 'Mercurio', edad: 6, tema: 'Sumar y restar hasta 20, el reloj y los días',
-    habs: ['dobles', 'descomponer', 'sumas20', 'restas20', 'reloj', 'dias', 'ordenar'],
-    aprende: ['dobles', 'reloj', 'dias'],
-    mision: { id: 'horario', icono: '⏰', habs: ['reloj', 'dias', 'ordenar'], nombre: 'El horario de la nave' },
+    id: 'mercurio', nombre: 'Mercurio',
+    mision: { id: 'horario', icono: '⏰', nombre: 'El horario de la nave' },
     proyecto: { icono: '🛡️', nombre: 'El escudo contra el calor' },
     casa: { icono: '🕰️', nombre: 'Mirar la hora con un adulto' },
     pieza: 'escudo', cartas: ['mercurio', 'orbita'],
     musica: { escala: 'mayor', tono: 7, tempo: 108, semilla: 53 }
   },
   {
-    id: 'jupiter', nombre: 'Júpiter', edad: 6, tema: 'Hasta 100, mayor y menor, dinero y problemas',
-    habs: ['tabla100', 'numero100', 'signos', 'contarDinero', 'pagar', 'problema'],
-    aprende: ['tabla100', 'signos', 'contarDinero'],
-    mision: { id: 'tienda', icono: '🛒', habs: ['pagar', 'contarDinero', 'problema'], nombre: 'La tienda espacial' },
+    id: 'jupiter', nombre: 'Júpiter',
+    mision: { id: 'tienda', icono: '🛒', nombre: 'La tienda espacial' },
     proyecto: { icono: '🛰️', nombre: 'Rescatar la sonda' },
     casa: { icono: '🪙', nombre: 'Jugar a las tiendas' },
     pieza: 'antena', cartas: ['jupiter', 'mancha'],
     musica: { escala: 'mixolidia', tono: -5, tempo: 88, semilla: 61 }
   },
   {
-    id: 'saturno', nombre: 'Saturno', edad: 7, tema: 'Mitades, repartos, cuerpos, simetría y la media hora',
-    habs: ['mitad', 'repartir', 'cuerpos', 'simetria', 'relojMedia'],
-    aprende: ['mitad', 'cuerpos', 'relojMedia'],
-    mision: { id: 'comida', icono: '🍪', habs: ['repartir', 'mitad', 'dobles'], nombre: 'La comida de la tripulación' },
+    id: 'saturno', nombre: 'Saturno',
+    mision: { id: 'comida', icono: '🍪', nombre: 'La comida de la tripulación' },
     proyecto: { icono: '🏙️', nombre: 'La estación de los anillos' },
     casa: { icono: '🍎', nombre: 'Repartir la merienda' },
     pieza: 'luces', cartas: ['saturno', 'anillos'],
     musica: { escala: 'pentatonica', tono: 3, tempo: 94, semilla: 71 }
   },
   {
-    id: 'urano', nombre: 'Urano', edad: 7, tema: 'Dos cifras, el cambio, gráficas, peso y capacidad',
-    habs: ['sumaDecenas', 'restaDecenas', 'cambio', 'grafica', 'balanza', 'capacidad'],
-    aprende: ['sumaDecenas', 'grafica', 'balanza'],
-    mision: { id: 'carga', icono: '⚖️', habs: ['carga', 'balanza', 'cambio'], nombre: 'Cargar el cohete' },
+    id: 'urano', nombre: 'Urano',
+    mision: { id: 'carga', icono: '⚖️', nombre: 'Cargar el cohete' },
     proyecto: { icono: '🔭', nombre: 'El telescopio gigante' },
     casa: { icono: '🥛', nombre: 'Comparar vasos de agua' },
     pieza: 'propulsores', cartas: ['urano', 'gigantes'],
     musica: { escala: 'dorica', tono: -2, tempo: 80, semilla: 83 }
   },
   {
-    id: 'neptuno', nombre: 'Neptuno', edad: 7, tema: 'Grupos iguales, problemas de dos pasos y lógica',
-    habs: ['grupos', 'problema2', 'sobra', 'sudoku', 'robot'],
-    aprende: ['grupos', 'sobra', 'robot'],
-    mision: { id: 'mapa', icono: '🗺️', habs: ['robot', 'sudoku', 'grupos'], nombre: 'El mapa estelar' },
+    id: 'neptuno', nombre: 'Neptuno',
+    mision: { id: 'mapa', icono: '🗺️', nombre: 'El mapa estelar' },
     proyecto: { icono: '📡', nombre: 'Rescatar el satélite' },
     casa: { icono: '🧭', nombre: 'Guiar a un adulto con órdenes' },
     pieza: 'radar', cartas: ['neptuno', 'pluton'],
     musica: { escala: 'dorica', tono: 5, tempo: 100, semilla: 97 }
   },
   {
-    id: 'sol', nombre: 'Sol', edad: 7, tema: 'El orden de los planetas y el gran desafío final',
-    habs: ['ordenPlanetas', 'tamanos', 'repaso'],
-    aprende: ['ordenPlanetas', 'tamanos'],
-    mision: { id: 'viaje', icono: '☀️', habs: ['ordenPlanetas', 'tamanos', 'ciencia'], nombre: 'El viaje al Sol' },
+    id: 'sol', nombre: 'Sol',
+    mision: { id: 'viaje', icono: '☀️', nombre: 'El viaje al Sol' },
     proyecto: { icono: '🏆', nombre: 'El gran desafío final' },
     casa: { icono: '👤', nombre: 'Mirar tu sombra' },
     pieza: 'panel', cartas: ['sol', 'estrellas'],
@@ -167,8 +149,82 @@ const MUNDOS = [
 const IDX_MUNDO = {};
 MUNDOS.forEach((m, i) => { IDX_MUNDO[m.id] = i; });
 
-/* Habilidad principal de cada mundo para la prueba inicial */
-const PRUEBA_HABS = { tierra: ['contar', 'tocaNumero'], luna: ['sumas', 'marcos'], marte: ['quitar', 'secuencias'], venus: ['decenas', 'saltos'], mercurio: ['sumas20', 'reloj'] };
+/* ---------- Niveles por edad (versión 4) ----------
+   Cada explorador elige su nivel al empezar (y los padres pueden cambiarlo).
+   Los 10 planetas, la ciencia, las cartas y la nave son iguales para todos;
+   lo que cambia son las matemáticas que se practican en cada planeta. */
+const NIVELES = [
+  { id: 'a', edades: '5-6', frase: 'nivel_56', nombre: 'De 5 a 6 años', edad: 5, color: '#2FD18E',
+    resumen: 'Contar, sumar y restar hasta 10 y 20, formas, series, medir, el reloj y el dinero.' },
+  { id: 'b', edades: '6-7', frase: 'nivel_67', nombre: 'De 6 a 7 años', edad: 6, color: '#3FB2F2',
+    resumen: 'Hasta 100, decenas, sumas y restas hasta 20, el reloj, el dinero, dos cifras y problemas.' },
+  { id: 'c', edades: '7-8', frase: 'nivel_78', nombre: 'De 7 a 8 años', edad: 7.5, color: '#9B7BF7',
+    resumen: 'Hasta 1000, sumar y restar llevando, tablas de multiplicar, fracciones, el reloj con minutos y problemas largos.' }
+];
+const NIVEL = {};
+NIVELES.forEach((n, i) => { n.i = i; NIVEL[n.id] = n; });
+
+/* Plan de cada planeta según el nivel:
+   tema (para los padres) · habs (habilidades del planeta) · aprende (las 3 que se enseñan con calma)
+   · mision (habilidades de la misión; la primera es la del tema de la misión)
+   · misionFrase / misionNombre: misión con otra historia en ese nivel */
+const CURRICULO = {
+  a: {
+    tierra: { tema: 'Números hasta 10, más y menos, formas', habs: ['contar', 'dame', 'fogonazo', 'dedos', 'tocaNumero', 'grupoNumero', 'comparar', 'formas', 'buscaTodas'], aprende: ['contar', 'tocaNumero', 'formas'], mision: ['mochila', 'contar', 'grupoNumero'] },
+    luna: { tema: 'Hasta 20, sumar hasta 10 y series', habs: ['numero20', 'marcos', 'sumas', 'llenar', 'patrones'], aprende: ['marcos', 'sumas', 'patrones'], mision: ['rocas', 'llenar', 'marcos'] },
+    marte: { tema: 'Restar hasta 10, antes y después, medir', habs: ['revienta', 'quitar', 'secuencias', 'medir', 'largo'], aprende: ['revienta', 'secuencias', 'medir'], mision: ['medir', 'largo', 'quitar'] },
+    venus: { tema: 'Hasta 50: decenas, saltos, pares e impares', habs: ['numero50', 'decenas', 'haceNumero', 'saltos', 'pares'], aprende: ['decenas', 'saltos', 'pares'], mision: ['haceNumero', 'decenas', 'saltos'] },
+    mercurio: { tema: 'Sumar y restar hasta 20, el reloj y los días', habs: ['dobles', 'descomponer', 'sumas20', 'restas20', 'reloj', 'dias', 'ordenar'], aprende: ['dobles', 'reloj', 'dias'], mision: ['reloj', 'dias', 'ordenar'] },
+    jupiter: { tema: 'Hasta 100, mayor y menor, dinero y problemas', habs: ['tabla100', 'numero100', 'signos', 'contarDinero', 'pagar', 'problema'], aprende: ['tabla100', 'signos', 'contarDinero'], mision: ['pagar', 'contarDinero', 'problema'] },
+    saturno: { tema: 'Mitades, repartos, cuerpos, simetría y la media hora', habs: ['mitad', 'repartir', 'cuerpos', 'simetria', 'relojMedia'], aprende: ['mitad', 'cuerpos', 'relojMedia'], mision: ['repartir', 'mitad', 'dobles'] },
+    urano: { tema: 'Gráficas, peso y capacidad', habs: ['grafica', 'balanza', 'capacidad', 'sumas20', 'restas20'], aprende: ['grafica', 'balanza', 'capacidad'], mision: ['carga', 'balanza', 'capacidad'] },
+    neptuno: { tema: 'Lógica: ¿cuál sobra?, sudokus y robots', habs: ['sobra', 'sudoku', 'robot', 'problema', 'patrones'], aprende: ['sobra', 'sudoku', 'robot'], mision: ['robot', 'sudoku', 'sobra'] },
+    sol: { tema: 'El orden de los planetas y el gran desafío final', habs: ['ordenPlanetas', 'tamanos', 'repaso'], aprende: ['ordenPlanetas', 'tamanos'], mision: ['ordenPlanetas', 'tamanos', 'ciencia'] }
+  },
+  b: {
+    tierra: { tema: 'Hasta 20, sumar hasta 10 y formas', habs: ['numero20', 'marcos', 'sumas', 'llenar', 'comparar', 'formas'], aprende: ['marcos', 'sumas', 'llenar'], mision: ['mochila', 'sumas', 'numero20'] },
+    luna: { tema: 'Restar hasta 10, antes y después, series', habs: ['revienta', 'quitar', 'secuencias', 'patrones', 'sumas'], aprende: ['revienta', 'quitar', 'secuencias'], mision: ['rocas', 'quitar', 'llenar'] },
+    marte: { tema: 'Hasta 50 con decenas, y medir', habs: ['numero50', 'decenas', 'haceNumero', 'medir', 'largo'], aprende: ['decenas', 'haceNumero', 'medir'], mision: ['medir', 'largo', 'decenas'] },
+    venus: { tema: 'Saltos, pares e impares, dobles', habs: ['saltos', 'pares', 'dobles', 'descomponer', 'numero50'], aprende: ['saltos', 'pares', 'dobles'], mision: ['haceNumero', 'decenas', 'saltos'] },
+    mercurio: { tema: 'Sumar y restar hasta 20, el reloj y los días', habs: ['sumas20', 'restas20', 'reloj', 'dias', 'ordenar', 'descomponer'], aprende: ['sumas20', 'reloj', 'dias'], mision: ['reloj', 'dias', 'ordenar'] },
+    jupiter: { tema: 'Hasta 100, mayor y menor, dinero y problemas', habs: ['tabla100', 'numero100', 'signos', 'contarDinero', 'pagar', 'problema'], aprende: ['tabla100', 'signos', 'contarDinero'], mision: ['pagar', 'contarDinero', 'problema'] },
+    saturno: { tema: 'Mitades, repartos, cuerpos, simetría y la media hora', habs: ['mitad', 'repartir', 'cuerpos', 'simetria', 'relojMedia'], aprende: ['mitad', 'cuerpos', 'relojMedia'], mision: ['repartir', 'mitad', 'dobles'] },
+    urano: { tema: 'Dos cifras, el cambio, gráficas, peso y capacidad', habs: ['sumaDecenas', 'restaDecenas', 'cambio', 'grafica', 'balanza', 'capacidad'], aprende: ['sumaDecenas', 'grafica', 'balanza'], mision: ['carga', 'balanza', 'cambio'] },
+    neptuno: { tema: 'Grupos iguales, problemas de dos pasos y lógica', habs: ['grupos', 'problema2', 'sobra', 'sudoku', 'robot'], aprende: ['grupos', 'sobra', 'robot'], mision: ['robot', 'sudoku', 'grupos'] },
+    sol: { tema: 'El orden de los planetas y el gran desafío final', habs: ['ordenPlanetas', 'tamanos', 'repaso'], aprende: ['ordenPlanetas', 'tamanos'], mision: ['ordenPlanetas', 'tamanos', 'ciencia'] }
+  },
+  c: {
+    tierra: { tema: 'Repaso hasta 100: sumas y restas de dos cifras', habs: ['numero100', 'sumaDecenas', 'restaDecenas', 'signos', 'problema', 'sumas20'], aprende: ['sumaDecenas', 'restaDecenas', 'signos'], mision: ['problema', 'sumaDecenas', 'restaDecenas'], misionFrase: 'mision_provisiones', misionNombre: 'Las provisiones del viaje' },
+    luna: { tema: 'Números hasta 1000 y series', habs: ['centenas', 'numero1000', 'mayor1000', 'seriesNum'], aprende: ['centenas', 'numero1000', 'mayor1000'], mision: ['centenas', 'seriesNum', 'numero1000'], misionFrase: 'mision_rocas100', misionNombre: 'Rocas de cien en cien' },
+    marte: { tema: 'Sumar llevando y gráficas', habs: ['sumaLlevar', 'sumaDecenas', 'seriesNum', 'grafica'], aprende: ['sumaLlevar', 'seriesNum', 'grafica'], mision: ['sumaLlevar', 'grafica', 'sumaDecenas'] },
+    venus: { tema: 'Restar llevando, pares e impares', habs: ['restaLlevar', 'sumaLlevar', 'restaDecenas', 'pares', 'mayor1000'], aprende: ['restaLlevar', 'sumaLlevar', 'pares'], mision: ['restaLlevar', 'sumaLlevar', 'problema'], misionFrase: 'mision_revision', misionNombre: 'Revisar la carga' },
+    mercurio: { tema: 'El reloj con minutos y la semana', habs: ['relojMinutos', 'relojMedia', 'dias', 'sumaLlevar', 'restaLlevar'], aprende: ['relojMinutos', 'relojMedia', 'dias'], mision: ['relojMinutos', 'dias', 'relojMedia'] },
+    jupiter: { tema: 'Dinero, el cambio y problemas largos', habs: ['contarDinero', 'pagar', 'cambio', 'problemaLargo', 'mayor1000'], aprende: ['contarDinero', 'cambio', 'problemaLargo'], mision: ['pagar', 'cambio', 'problemaLargo'] },
+    saturno: { tema: 'Las tablas de multiplicar, repartos y simetría', habs: ['tablas', 'grupos', 'repartir', 'simetria', 'cuerpos'], aprende: ['tablas', 'grupos', 'simetria'], mision: ['repartir', 'tablas', 'grupos'] },
+    urano: { tema: 'Fracciones, peso y capacidad', habs: ['fracciones', 'fraccionDe', 'mitad', 'balanza', 'capacidad', 'grafica'], aprende: ['fracciones', 'fraccionDe', 'balanza'], mision: ['carga', 'fraccionDe', 'balanza'] },
+    neptuno: { tema: 'Problemas de multiplicar y lógica', habs: ['multiplicar', 'tablas', 'problemaLargo', 'sudoku', 'robot'], aprende: ['multiplicar', 'sudoku', 'robot'], mision: ['robot', 'multiplicar', 'sudoku'] },
+    sol: { tema: 'El orden de los planetas y el gran desafío final', habs: ['ordenPlanetas', 'tamanos', 'repaso'], aprende: ['ordenPlanetas', 'tamanos'], mision: ['ordenPlanetas', 'tamanos', 'ciencia'] }
+  }
+};
+
+/* Nivel del perfil activo (o del perfil dado) */
+function nivelDe(p) {
+  if (p === undefined && typeof Guardado !== 'undefined') p = Guardado.p;
+  return p && CURRICULO[p.banda] ? p.banda : 'a';
+}
+/* Plan de un planeta (por índice) para un nivel */
+function cur(idx, banda) { return CURRICULO[banda || nivelDe()][MUNDOS[idx].id]; }
+/* Nombre de la misión de un planeta en un nivel */
+function nombreMision(idx, banda) { return cur(idx, banda).misionNombre || MUNDOS[idx].mision.nombre; }
+
+/* Edad a la que corresponde cada habilidad: sirve para empezar con la dificultad justa
+   (por ejemplo, con 7 u 8 años las sumas hasta 10 empiezan ya en el grado difícil). */
+const EDAD_HAB = {};
+[[5, 'contar dame mochila fogonazo dedos tocaNumero grupoNumero comparar formas buscaTodas numero20 marcos sumas rocas llenar patrones revienta quitar secuencias medir largo ordenPlanetas tamanos repaso ciencia palabras'],
+ [6, 'numero50 decenas haceNumero saltos pares dobles descomponer sumas20 restas20 reloj dias ordenar tabla100 numero100 signos contarDinero pagar problema'],
+ [7, 'mitad repartir cuerpos simetria relojMedia sumaDecenas restaDecenas cambio grafica balanza capacidad carga grupos problema2 sobra sudoku robot'],
+ [8, 'centenas numero1000 mayor1000 seriesNum sumaLlevar restaLlevar tablas multiplicar fracciones fraccionDe relojMinutos problemaLargo']
+].forEach(par => par[1].split(' ').forEach(h => { EDAD_HAB[h] = par[0]; }));
 
 /* ---------- Habilidades: nombre para la zona de padres y consejo para casa ---------- */
 const HABILIDADES = {
@@ -232,7 +288,19 @@ const HABILIDADES = {
   tamanos: { nombre: 'Tamaño de los planetas', casa: 'Comparad planetas con frutas: Júpiter sandía, la Tierra uva…' },
   repaso: { nombre: 'Repaso de todo', casa: 'Jugad a lo que más le cueste.' },
   palabras: { nombre: 'Leer palabras del espacio', casa: 'Leed juntos palabras cortas en mayúsculas.' },
-  ciencia: { nombre: 'Ciencia del sistema solar', casa: 'Mirad el álbum de cartas y contadlo con vuestras palabras.' }
+  ciencia: { nombre: 'Ciencia del sistema solar', casa: 'Mirad el álbum de cartas y contadlo con vuestras palabras.' },
+  centenas: { nombre: 'Centenas, decenas y unidades (hasta 1000)', casa: 'Con billetes de juguete de 100, 10 y 1, formad números de tres cifras.' },
+  numero1000: { nombre: 'Leer y escribir números hasta 1000', casa: 'Leed números de tres cifras en matrículas, páginas o precios.' },
+  mayor1000: { nombre: 'Comparar números hasta 1000', casa: '¿Qué cuesta más? Comparad precios mirando primero las centenas.' },
+  seriesNum: { nombre: 'Series de números (saltos)', casa: 'Contad de 3 en 3, de 5 en 5 o de 100 en 100 al subir escaleras.' },
+  sumaLlevar: { nombre: 'Sumar llevando', casa: 'Con palillos sueltos y atados de 10: cuando hay 10 sueltos, se atan.' },
+  restaLlevar: { nombre: 'Restar llevando', casa: 'Si no hay bastantes sueltos, desatad un atado de 10.' },
+  tablas: { nombre: 'Tablas de multiplicar', casa: 'Repasad una tabla al día con ritmo o canciones; empezad por la del 2, el 5 y el 10.' },
+  multiplicar: { nombre: 'Problemas de multiplicar y repartir', casa: 'Bolsas con la misma cantidad: ¿cuántas cosas hay en total?' },
+  fracciones: { nombre: 'Fracciones: medios, tercios y cuartos', casa: 'Partid una pizza o una tortilla en partes iguales y nombradlas.' },
+  fraccionDe: { nombre: 'Fracción de una cantidad', casa: '¿Cuánto es un cuarto de 12 fresas? Repartid en 4 platos.' },
+  relojMinutos: { nombre: 'Leer el reloj con minutos', casa: 'Leed juntos la hora en un reloj de agujas: y cuarto, menos cuarto, y diez…' },
+  problemaLargo: { nombre: 'Problemas largos (dos pasos, hasta 100)', casa: 'Inventad problemas con la compra: compramos, nos dan, gastamos…' }
 };
 
 /* Pictograma de cada actividad (apoyo visual de la consigna, sin texto) */
@@ -245,7 +313,9 @@ const PICTOS = {
   contarDinero: '💶❓', pagar: '💶➡️', problema: '👂❓', mitad: '½', repartir: '🍪👥', cuerpos: '🧊⚽', simetria: '🦋🪞',
   relojMedia: '🕧', sumaDecenas: '🔟➕', restaDecenas: '🔟➖', cambio: '💶↩️', grafica: '📊', balanza: '⚖️', capacidad: '🥛',
   carga: '🚀⚖️', grupos: '👜✖️', problema2: '👂❓', sobra: '🤔', sudoku: '🧩', robot: '🤖🚩', ordenPlanetas: '☀️🪐',
-  tamanos: '🪐↕️', repaso: '🔁', palabras: '🔤', ciencia: '🔭'
+  tamanos: '🪐↕️', repaso: '🔁', palabras: '🔤', ciencia: '🔭',
+  centenas: '💯🔢', numero1000: '👂🔢', mayor1000: '🐊', seriesNum: '🦘❓', sumaLlevar: '🔟➕', restaLlevar: '🔟➖',
+  tablas: '✖️', multiplicar: '👜✖️', fracciones: '🍕', fraccionDe: '🍕❓', relojMinutos: '🕒', problemaLargo: '👂❓'
 };
 
 /* Voces de Pipo: tres naturales (grabadas en el archivo) y la del dispositivo */

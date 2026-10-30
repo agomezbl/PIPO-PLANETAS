@@ -12,6 +12,7 @@ function reajustar() {
     ajustarAltura();
     Render.ajustar();
     if (UI.pantalla === 'p-mapa') { Mapa.distribuir(); Mapa.centrar(); }
+    if (UI.pantalla === 'p-mundo') Mundo.distribuir();
     if (UI.pantalla === 'p-album') Album.ajustar();
     if (Confeti.activo) Confeti.ajustar();
   }, 120);
@@ -35,6 +36,8 @@ function enlazarEventos() {
   $$('#p-album .pestana').forEach(b => b.addEventListener('click', () => Album.cambiar(b.dataset.tab)));
   $$('#p-taller .pestana').forEach(b => b.addEventListener('click', () => Taller.cambiar(b.dataset.tab)));
   alClic('#btnMundoVolver', () => { Sonido.efecto('toque'); Mapa.abrir({}); });
+  alClic('#btnSeguirViaje', () => Mapa.seguir());
+  alClic('#btnJugarNivel', () => Mundo.jugarSiguiente());
   alClic('#btnDescubreSalir', () => Descubre.salir());
   alClic('#btnDescubreSeguir', () => { Sonido.efecto('toque'); Mano.ocultar(); Descubre.siguiente(); });
   alClic('#btnPausa', () => Juego.pausar());
@@ -86,6 +89,7 @@ function enlazarEventos() {
 
 function iniciarApp() {
   Guardado.cargar();
+  Iconos.iniciar();
   pintarIconos(document);
   crearCielo();
   Voz.iniciar();

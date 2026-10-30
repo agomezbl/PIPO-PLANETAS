@@ -6,128 +6,157 @@
 let contadorSVG = 0;
 const idSVG = base => base + (++contadorSVG);
 
-/* Datos de dibujo de cada cuerpo del sistema solar */
+/* Datos de dibujo de cada cuerpo del sistema solar (versión 4: con atmósfera y más detalle) */
 const ASTROS = {
-  mercurio: { nombre: 'Mercurio', c1: '#C9BCAF', c2: '#7D6E63' },
-  venus: { nombre: 'Venus', c1: '#FBE3A6', c2: '#D99A4A' },
-  tierra: { nombre: 'Tierra', c1: '#56A8F5', c2: '#1B4F9C' },
-  luna: { nombre: 'Luna', c1: '#EEEEF4', c2: '#9C9CB0' },
-  marte: { nombre: 'Marte', c1: '#F08A5D', c2: '#A8361E' },
-  jupiter: { nombre: 'Júpiter', c1: '#F1DDBA', c2: '#B9774A' },
-  saturno: { nombre: 'Saturno', c1: '#F6E2A8', c2: '#C49A4C' },
-  urano: { nombre: 'Urano', c1: '#C7F7F5', c2: '#4FB7C7' },
-  neptuno: { nombre: 'Neptuno', c1: '#7FA1FF', c2: '#1E3BB8' },
-  sol: { nombre: 'Sol', c1: '#FFF6B0', c2: '#FF8A1F' },
-  pluton: { nombre: 'Plutón', c1: '#E8CFB4', c2: '#9E7A5E' }
+  mercurio: { nombre: 'Mercurio', c1: '#D6CBC0', c2: '#6F625A' },
+  venus: { nombre: 'Venus', c1: '#FFF1C9', c2: '#D38C3A', halo: '#FFE2A0' },
+  tierra: { nombre: 'Tierra', c1: '#5CBCFF', c2: '#163F9E', halo: '#7CC8FF' },
+  luna: { nombre: 'Luna', c1: '#F4F4F8', c2: '#8E8EA6' },
+  marte: { nombre: 'Marte', c1: '#FF9E6E', c2: '#982F18', halo: '#FF9A7A' },
+  jupiter: { nombre: 'Júpiter', c1: '#F7E6C8', c2: '#B5764A', halo: '#F5D6A8' },
+  saturno: { nombre: 'Saturno', c1: '#FAEBC0', c2: '#C29548', halo: '#F6E2A8' },
+  urano: { nombre: 'Urano', c1: '#D4FBF8', c2: '#3FA9BC', halo: '#B8FFF8' },
+  neptuno: { nombre: 'Neptuno', c1: '#8DB0FF', c2: '#1A2FA6', halo: '#7FA1FF' },
+  sol: { nombre: 'Sol', c1: '#FFF8C4', c2: '#FF7F1A' },
+  pluton: { nombre: 'Plutón', c1: '#EED8C0', c2: '#94705A' }
 };
+
+/* Banda ondulada (para los gigantes de gas): de y1 a y2, con olas */
+function bandaSVG(y1, y2, color, op, ola, fase) {
+  ola = ola || 2.4; fase = fase || 0;
+  let d = 'M0 ' + y1;
+  for (let x = 0; x <= 120; x += 10) d += ' L' + x + ' ' + (y1 + Math.sin(x / 13 + fase) * ola).toFixed(1);
+  for (let x = 120; x >= 0; x -= 10) d += ' L' + x + ' ' + (y2 + Math.sin(x / 11 + fase + 1.7) * ola).toFixed(1);
+  return '<path d="' + d + 'Z" fill="' + color + '" opacity="' + (op === undefined ? 1 : op) + '"/>';
+}
 
 /* Un planeta en un lienzo de 120 x 120 (círculo de radio 40 en el centro).
    op.mini = sin detalles finos (para el mapa en pantallas pequeñas) */
 function planetaSVG(id, op) {
   op = op || {};
   const a = ASTROS[id] || ASTROS.tierra;
-  const g = idSVG('pg'), sombra = idSVG('ps'), recorte = idSVG('pc');
-  let defs = '<radialGradient id="' + g + '" cx="36%" cy="32%" r="75%"><stop offset="0" stop-color="' + a.c1 + '"/><stop offset="1" stop-color="' + a.c2 + '"/></radialGradient>' +
-    '<radialGradient id="' + sombra + '" cx="30%" cy="28%" r="85%"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#10003C" stop-opacity=".45"/></radialGradient>' +
+  const g = idSVG('pg'), sombra = idSVG('ps'), recorte = idSVG('pc'), halo = idSVG('ph');
+  const fino = !op.mini;
+  let defs = '<radialGradient id="' + g + '" cx="34%" cy="30%" r="80%"><stop offset="0" stop-color="' + a.c1 + '"/><stop offset="1" stop-color="' + a.c2 + '"/></radialGradient>' +
+    '<radialGradient id="' + sombra + '" cx="30%" cy="27%" r="88%"><stop offset=".44" stop-color="#0B0530" stop-opacity="0"/><stop offset=".8" stop-color="#0B0530" stop-opacity=".46"/><stop offset="1" stop-color="#0B0530" stop-opacity=".74"/></radialGradient>' +
     '<clipPath id="' + recorte + '"><circle cx="60" cy="60" r="40"/></clipPath>';
-  let detras = '', cuerpo = '', delante = '';
+  if (a.halo) defs += '<radialGradient id="' + halo + '"><stop offset=".62" stop-color="' + a.halo + '" stop-opacity=".75"/><stop offset=".74" stop-color="' + a.halo + '" stop-opacity=".22"/><stop offset="1" stop-color="' + a.halo + '" stop-opacity="0"/></radialGradient>';
+  let detras = a.halo ? '<circle cx="60" cy="60" r="54" fill="url(#' + halo + ')"/>' : '', cuerpo = '', delante = '';
   const R = 'clip-path="url(#' + recorte + ')"';
+  const crater = (x, y, r, osc, claro) => '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="' + osc + '" opacity=".55"/>' +
+    (fino ? '<path d="M' + (x - r * 0.8) + ' ' + (y + r * 0.45) + ' A' + r + ' ' + r + ' 0 0 0 ' + (x + r * 0.85) + ' ' + (y + r * 0.35) + '" stroke="' + claro + '" stroke-width="1.5" fill="none" opacity=".85"/>' +
+      '<path d="M' + (x - r * 0.75) + ' ' + (y - r * 0.2) + ' A' + r + ' ' + r + ' 0 0 1 ' + (x + r * 0.3) + ' ' + (y - r * 0.85) + '" stroke="#000" stroke-width="1.2" fill="none" opacity=".18"/>' : '');
 
   switch (id) {
     case 'tierra':
       cuerpo = '<g ' + R + '>' +
-        '<path d="M30 40 C38 30 50 32 54 40 C58 48 50 52 52 60 C54 68 44 74 38 68 C30 60 24 50 30 40 Z" fill="#3DBE6B"/>' +
-        '<path d="M64 26 C74 22 88 30 90 40 C92 48 82 50 76 46 C70 42 60 34 64 26 Z" fill="#3DBE6B"/>' +
-        '<path d="M66 62 C74 58 86 64 88 74 C90 84 80 92 72 88 C64 84 60 70 66 62 Z" fill="#2E9E58"/>' +
-        (op.mini ? '' : '<path d="M26 78 C34 74 40 80 36 86" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".75"/>' +
-          '<path d="M58 50 C66 46 74 50 72 54" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>' +
-          '<ellipse cx="60" cy="21" rx="16" ry="5" fill="#fff" opacity=".9"/>') +
+        '<path d="M26 34 C34 26 46 28 50 36 C54 44 46 48 48 56 C50 64 42 72 36 68 C28 62 22 56 24 48 C25 42 22 38 26 34 Z" fill="#46C46E"/>' +
+        '<path d="M30 52 C34 50 38 54 36 60 C34 64 30 62 30 58Z" fill="#D9C27A" opacity=".85"/>' +
+        '<path d="M62 24 C72 20 86 26 90 36 C93 44 84 48 78 46 C72 44 66 40 62 34 C60 30 58 26 62 24 Z" fill="#46C46E"/>' +
+        '<path d="M64 60 C72 56 84 60 88 70 C91 80 82 90 74 88 C66 86 60 76 62 68 C62 64 62 62 64 60 Z" fill="#3BAE60"/>' +
+        '<path d="M74 66 C78 66 80 70 78 74 C76 76 72 74 72 70Z" fill="#D9C27A" opacity=".8"/>' +
+        '<path d="M44 88 C52 84 64 86 70 94 L40 96 Z" fill="#46C46E"/>' +
+        '<ellipse cx="60" cy="21" rx="20" ry="5.5" fill="#F4FBFF"/><ellipse cx="60" cy="99" rx="18" ry="5" fill="#F4FBFF"/>' +
+        (fino ? '<path d="M22 72 C30 66 40 70 46 66" stroke="#fff" stroke-width="4.5" fill="none" stroke-linecap="round" opacity=".85"/>' +
+          '<path d="M54 46 C62 40 74 44 80 40 C84 38 88 40 90 44" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".8"/>' +
+          '<path d="M50 80 C58 76 66 80 72 78" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" opacity=".75"/>' +
+          '<path d="M30 30 C34 28 38 30 40 28" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".7"/>' : '') +
         '</g>';
       break;
     case 'luna':
     case 'mercurio': {
-      const crat = id === 'luna'
-        ? [[44, 44, 8], [72, 40, 5], [66, 70, 10], [40, 74, 5], [84, 62, 4], [54, 58, 3]]
-        : [[46, 40, 6], [70, 46, 8], [52, 72, 7], [80, 70, 4], [36, 60, 4], [64, 26, 4]];
-      const osc = id === 'luna' ? '#A9A9BE' : '#6E5F55', claro = id === 'luna' ? '#F7F7FB' : '#D8CDC2';
-      cuerpo = '<g ' + R + '>' + crat.map(c => '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + c[2] + '" fill="' + osc + '" opacity=".75"/>' +
-        (op.mini ? '' : '<path d="M' + (c[0] - c[2] * 0.7) + ' ' + (c[1] + c[2] * 0.5) + ' A' + c[2] + ' ' + c[2] + ' 0 0 0 ' + (c[0] + c[2] * 0.8) + ' ' + (c[1] + c[2] * 0.4) + '" stroke="' + claro + '" stroke-width="1.6" fill="none" opacity=".8"/>')).join('') + '</g>';
+      const luna = id === 'luna';
+      const osc = luna ? '#8C8CA6' : '#5E5048', claro = luna ? '#FFFFFF' : '#E6DCD2';
+      const mares = luna ? '<path d="M36 40 C44 32 56 36 56 44 C56 52 46 54 40 52 C34 50 32 44 36 40Z M60 58 C68 52 80 56 80 64 C80 72 70 76 64 72 C58 68 56 62 60 58Z" fill="#A8A8BE" opacity=".55"/>' :
+        '<path d="M30 56 C40 50 50 58 48 66 C46 72 36 72 32 68 C28 64 26 60 30 56Z" fill="#8E8077" opacity=".45"/>';
+      const crat = luna ? [[44, 46, 6], [74, 38, 4.5], [68, 72, 8], [40, 76, 4.5], [86, 60, 3.5], [56, 58, 3], [30, 60, 3.5], [60, 88, 4]]
+        : [[46, 38, 5.5], [72, 46, 7.5], [52, 74, 6.5], [82, 70, 4], [34, 58, 4], [64, 26, 4], [60, 58, 3], [42, 90, 3.5], [88, 48, 3]];
+      cuerpo = '<g ' + R + '>' + mares + crat.map(c => crater(c[0], c[1], c[2], osc, claro)).join('') + '</g>';
       break;
     }
     case 'marte':
       cuerpo = '<g ' + R + '>' +
-        '<path d="M24 52 C36 44 48 54 58 50 C68 46 74 56 86 52 L96 60 L20 66 Z" fill="#B5462A" opacity=".55"/>' +
-        '<path d="M34 76 C44 72 54 80 66 76 C76 72 84 80 92 78 L92 92 L30 92 Z" fill="#9C3A22" opacity=".5"/>' +
-        '<ellipse cx="60" cy="22" rx="13" ry="5" fill="#fff" opacity=".85"/>' +
-        (op.mini ? '' : '<circle cx="44" cy="38" r="4" fill="#9C3A22" opacity=".6"/><circle cx="76" cy="66" r="3" fill="#9C3A22" opacity=".6"/>') +
+        '<path d="M20 52 C32 42 46 52 58 48 C70 44 76 54 90 50 L100 58 L20 66 Z" fill="#8E2E16" opacity=".5"/>' +
+        '<path d="M30 76 C42 70 54 80 66 76 C78 72 86 80 96 78 L96 96 L30 96 Z" fill="#8E2E16" opacity=".45"/>' +
+        '<path d="M36 64 C46 60 58 66 72 62" stroke="#6E2210" stroke-width="2.4" fill="none" opacity=".6" stroke-linecap="round"/>' +
+        '<ellipse cx="58" cy="21" rx="15" ry="5.5" fill="#FFF6F0" opacity=".95"/>' +
+        (fino ? crater(42, 36, 4, '#7A2A12', '#FFC0A0') + crater(78, 68, 3.5, '#7A2A12', '#FFC0A0') + crater(70, 36, 2.6, '#7A2A12', '#FFC0A0') +
+          '<path d="M74 30 L80 28 L84 32" stroke="#C25A36" stroke-width="2" fill="none" opacity=".7"/>' : '') +
         '</g>';
       break;
     case 'jupiter':
       cuerpo = '<g ' + R + '>' +
-        '<rect x="0" y="30" width="120" height="7" fill="#C98F5A" opacity=".8"/>' +
-        '<rect x="0" y="42" width="120" height="5" fill="#F7EBD3" opacity=".8"/>' +
-        '<rect x="0" y="52" width="120" height="9" fill="#B9774A" opacity=".75"/>' +
-        '<rect x="0" y="66" width="120" height="5" fill="#F7EBD3" opacity=".7"/>' +
-        '<rect x="0" y="76" width="120" height="8" fill="#C98F5A" opacity=".75"/>' +
-        '<ellipse cx="74" cy="72" rx="9" ry="5.5" fill="#C1442E" stroke="#F2B090" stroke-width="1.5"/>' +
+        bandaSVG(22, 28, '#E7C29A', 0.9, 1.5, 0) + bandaSVG(32, 39, '#C98F5A', 0.9, 2.2, 1) + bandaSVG(42, 46, '#FBF0DC', 0.9, 1.6, 2) +
+        bandaSVG(50, 60, '#B9774A', 0.85, 2.6, 3) + bandaSVG(64, 68, '#FBF0DC', 0.8, 1.6, 4) + bandaSVG(72, 80, '#C98F5A', 0.85, 2.2, 5) +
+        bandaSVG(84, 89, '#E7C29A', 0.85, 1.4, 6) + bandaSVG(92, 100, '#B9774A', 0.7, 2, 7) +
+        '<ellipse cx="76" cy="70" rx="11" ry="6.5" fill="#F2B090"/><ellipse cx="76" cy="70" rx="8.5" ry="4.8" fill="#C9472C"/><ellipse cx="74.5" cy="69" rx="4" ry="2.2" fill="#E2774F"/>' +
+        (fino ? '<path d="M30 56 C36 52 42 58 48 55 M58 36 C64 34 70 38 76 36" stroke="#FBF0DC" stroke-width="1.6" fill="none" opacity=".7"/>' : '') +
         '</g>';
       break;
     case 'saturno': {
       const anillo = (mitad) => {
-        // Elipse inclinada; se pinta la mitad de atrás antes del planeta y la de delante después
-        const d = mitad === 'atras' ? 'M2 60 A58 15 0 0 1 118 60' : 'M2 60 A58 15 0 0 0 118 60';
-        return '<g transform="rotate(-16 60 60)"><path d="' + d + '" stroke="#E9D9A6" stroke-width="7" fill="none"/>' +
-          '<path d="' + d.replace(/A58 15/, 'A58 15') + '" stroke="#C8AC6E" stroke-width="2" fill="none" transform="translate(0 -1)"/>' +
-          (op.mini ? '' : '<path d="M12 60 ' + (mitad === 'atras' ? 'A48 11 0 0 1 108 60' : 'A48 11 0 0 0 108 60') + '" stroke="#F6EBC8" stroke-width="3" fill="none" opacity=".8"/>') +
-          '</g>';
+        const sw = mitad === 'atras' ? 1 : 0;
+        const arco = (rx, ry) => 'M' + (60 - rx) + ' 60 A' + rx + ' ' + ry + ' 0 0 ' + sw + ' ' + (60 + rx) + ' 60';
+        return '<g transform="rotate(-16 60 60)">' +
+          '<path d="' + arco(58, 15.5) + '" stroke="#C8AC6E" stroke-width="4" fill="none" opacity=".85"/>' +
+          '<path d="' + arco(53, 14) + '" stroke="#F1E2B4" stroke-width="5" fill="none"/>' +
+          '<path d="' + arco(47.5, 12.4) + '" stroke="#D9C084" stroke-width="2.4" fill="none" opacity=".9"/>' +
+          (fino ? '<path d="' + arco(44, 11.4) + '" stroke="#FFF6DA" stroke-width="2" fill="none" opacity=".7"/>' : '') + '</g>';
       };
-      detras = anillo('atras');
-      cuerpo = '<g ' + R + '><rect x="0" y="40" width="120" height="6" fill="#D7B46A" opacity=".7"/><rect x="0" y="54" width="120" height="8" fill="#F3E2B0" opacity=".7"/><rect x="0" y="70" width="120" height="6" fill="#D7B46A" opacity=".6"/></g>';
+      detras = (a.halo ? '<circle cx="60" cy="60" r="50" fill="url(#' + halo + ')" opacity=".6"/>' : '') + anillo('atras');
+      cuerpo = '<g ' + R + '>' + bandaSVG(30, 36, '#E3C27E', 0.75, 1.2, 0) + bandaSVG(42, 48, '#F7E7BC', 0.8, 1.2, 1) + bandaSVG(52, 60, '#D7B46A', 0.7, 1.4, 2) +
+        bandaSVG(66, 72, '#F7E7BC', 0.7, 1.2, 3) + bandaSVG(78, 86, '#C9A35E', 0.6, 1.2, 4) +
+        '<path d="M14 70 A58 15 0 0 0 108 54" stroke="#6E5420" stroke-width="5" fill="none" opacity=".28" transform="rotate(-16 60 60)"/></g>';
       delante = anillo('delante');
       break;
     }
     case 'urano':
-      detras = '<ellipse cx="60" cy="60" rx="9" ry="54" stroke="#DDF7F6" stroke-width="2.5" fill="none" opacity=".7" transform="rotate(-8 60 60)"/>';
-      cuerpo = '<g ' + R + '><rect x="0" y="36" width="120" height="4" fill="#E2FBFA" opacity=".35"/><rect x="0" y="74" width="120" height="5" fill="#3EA2B4" opacity=".3"/></g>';
+      detras = '<path d="M60 4 A10 56 0 0 0 60 116" stroke="#E6FBFA" stroke-width="2" fill="none" opacity=".5" transform="rotate(-8 60 60)"/>' + detras;
+      cuerpo = '<g ' + R + '>' + bandaSVG(34, 40, '#EFFFFE', 0.3, 1, 0) + bandaSVG(70, 78, '#3196A8', 0.3, 1, 2) + '<ellipse cx="60" cy="24" rx="18" ry="6" fill="#F2FFFE" opacity=".35"/></g>';
+      delante = '<path d="M60 4 A10 56 0 0 1 60 116" stroke="#F2FFFE" stroke-width="2.4" fill="none" opacity=".8" transform="rotate(-8 60 60)"/>';
       break;
     case 'neptuno':
-      cuerpo = '<g ' + R + '><rect x="0" y="34" width="120" height="5" fill="#9DB6FF" opacity=".45"/><rect x="0" y="62" width="120" height="7" fill="#3355D6" opacity=".55"/>' +
-        '<ellipse cx="46" cy="52" rx="8" ry="5" fill="#16257A" opacity=".8"/>' +
-        (op.mini ? '' : '<path d="M60 46 C66 44 74 46 78 44" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".8"/>') + '</g>';
+      cuerpo = '<g ' + R + '>' + bandaSVG(30, 36, '#A9C1FF', 0.4, 1.4, 0) + bandaSVG(56, 66, '#2442C8', 0.6, 2, 1) + bandaSVG(80, 88, '#3355D6', 0.45, 1.6, 2) +
+        '<ellipse cx="46" cy="50" rx="9" ry="5.5" fill="#101B6E" opacity=".85"/>' +
+        (fino ? '<path d="M44 42 C50 40 56 42 60 40" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".85"/><path d="M66 70 C72 68 78 70 84 68" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".75"/>' : '') + '</g>';
       break;
     case 'venus':
       cuerpo = '<g ' + R + '>' +
-        '<path d="M18 44 C34 36 46 50 62 42 C78 34 90 46 104 40" stroke="#FCEBC4" stroke-width="6" fill="none" opacity=".75"/>' +
-        '<path d="M16 64 C32 56 48 70 64 62 C80 54 92 66 104 60" stroke="#E8B465" stroke-width="7" fill="none" opacity=".6"/>' +
-        '<path d="M22 82 C38 76 50 88 66 80 C80 74 90 84 100 80" stroke="#FCEBC4" stroke-width="5" fill="none" opacity=".6"/>' +
+        '<path d="M14 40 C30 30 44 46 62 38 C80 30 92 44 106 36" stroke="#FFF4D6" stroke-width="7" fill="none" opacity=".75"/>' +
+        '<path d="M14 58 C30 50 48 66 64 58 C80 50 92 62 106 56" stroke="#E2A855" stroke-width="8" fill="none" opacity=".6"/>' +
+        '<path d="M18 76 C36 70 50 84 66 76 C80 70 90 80 102 76" stroke="#FFF4D6" stroke-width="6" fill="none" opacity=".6"/>' +
+        (fino ? '<path d="M24 88 C40 84 54 94 70 90 C80 88 88 92 96 90" stroke="#E2A855" stroke-width="5" fill="none" opacity=".5"/><path d="M30 26 C40 22 52 28 62 24" stroke="#FFF4D6" stroke-width="4" fill="none" opacity=".6"/>' : '') +
         '</g>';
       break;
     case 'pluton':
-      cuerpo = '<g ' + R + '><path d="M62 82 C46 70 44 58 52 54 C57 51 61 55 62 58 C63 55 67 51 72 54 C80 58 78 70 62 82 Z" fill="#F6E8D6" opacity=".9"/>' +
-        '<circle cx="40" cy="44" r="5" fill="#8A6A52" opacity=".6"/></g>';
+      cuerpo = '<g ' + R + '><path d="M62 82 C46 70 44 58 52 54 C57 51 61 55 62 58 C63 55 67 51 72 54 C80 58 78 70 62 82 Z" fill="#F8ECDC" opacity=".9"/>' +
+        crater(40, 44, 4, '#7A5A44', '#F8ECDC') + '</g>';
       break;
     case 'sol': {
-      const halo = idSVG('sh');
-      defs += '<radialGradient id="' + halo + '"><stop offset=".55" stop-color="#FFD54A" stop-opacity=".75"/><stop offset="1" stop-color="#FF9F43" stop-opacity="0"/></radialGradient>';
+      const corona = idSVG('sh'), nucleo = idSVG('sn');
+      defs += '<radialGradient id="' + corona + '"><stop offset=".5" stop-color="#FFD54A" stop-opacity=".9"/><stop offset=".7" stop-color="#FFB02E" stop-opacity=".35"/><stop offset="1" stop-color="#FF8A1F" stop-opacity="0"/></radialGradient>' +
+        '<radialGradient id="' + nucleo + '" cx="42%" cy="38%" r="70%"><stop offset="0" stop-color="#FFFBE0"/><stop offset=".45" stop-color="#FFD84A"/><stop offset="1" stop-color="#FF8A1F"/></radialGradient>';
       let rayos = '';
-      for (let i = 0; i < 12; i++) {
-        const ang = i * Math.PI / 6;
-        const x1 = 60 + Math.cos(ang - 0.12) * 44, y1 = 60 + Math.sin(ang - 0.12) * 44;
-        const x2 = 60 + Math.cos(ang) * 58, y2 = 60 + Math.sin(ang) * 58;
-        const x3 = 60 + Math.cos(ang + 0.12) * 44, y3 = 60 + Math.sin(ang + 0.12) * 44;
-        rayos += '<path d="M' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' L' + x2.toFixed(1) + ' ' + y2.toFixed(1) + ' L' + x3.toFixed(1) + ' ' + y3.toFixed(1) + ' Z" fill="#FFB020"/>';
+      for (let i = 0; i < 16; i++) {
+        const ang = i * Math.PI / 8, larg = i % 2 ? 52 : 59;
+        const x1 = 60 + Math.cos(ang - 0.1) * 43, y1 = 60 + Math.sin(ang - 0.1) * 43;
+        const x2 = 60 + Math.cos(ang) * larg, y2 = 60 + Math.sin(ang) * larg;
+        const x3 = 60 + Math.cos(ang + 0.1) * 43, y3 = 60 + Math.sin(ang + 0.1) * 43;
+        rayos += '<path d="M' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' L' + x2.toFixed(1) + ' ' + y2.toFixed(1) + ' L' + x3.toFixed(1) + ' ' + y3.toFixed(1) + ' Z" fill="' + (i % 2 ? '#FFC23A' : '#FFA41F') + '"/>';
       }
-      detras = '<circle cx="60" cy="60" r="60" fill="url(#' + halo + ')"/><g class="sol-rayos">' + rayos + '</g>';
-      cuerpo = op.mini ? '' : '<g ' + R + '><circle cx="44" cy="70" r="6" fill="#FFB020" opacity=".35"/><circle cx="74" cy="46" r="4" fill="#FFB020" opacity=".35"/><circle cx="70" cy="78" r="3" fill="#FFF6B0" opacity=".5"/></g>';
+      detras = '<circle cx="60" cy="60" r="60" fill="url(#' + corona + ')"/><g class="sol-rayos">' + rayos + '</g>';
+      cuerpo = '<circle cx="60" cy="60" r="40" fill="url(#' + nucleo + ')"/>' + (fino ? '<g ' + R + '>' +
+        [[44, 70, 6], [74, 46, 4], [70, 78, 3], [52, 44, 3], [84, 66, 3.5], [36, 54, 2.5]].map(c => '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + c[2] + '" fill="#FF9A1F" opacity=".35"/>').join('') + '</g>' : '');
       break;
     }
     default: break;
   }
   const radio = 40;
+  const rim = id === 'sol' ? '' : '<path d="M24 52 A37 37 0 0 1 52 23" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".38"/>';
   return '<svg class="astro astro-' + id + '" viewBox="0 0 120 120" aria-hidden="true"><defs>' + defs + '</defs>' + detras +
     '<circle cx="60" cy="60" r="' + radio + '" fill="url(#' + g + ')"/>' + cuerpo +
-    (id === 'sol' ? '' : '<circle cx="60" cy="60" r="' + radio + '" fill="url(#' + sombra + ')"/>') +
-    '<ellipse cx="46" cy="40" rx="11" ry="6" fill="#fff" opacity="' + (id === 'sol' ? '.35' : '.22') + '" transform="rotate(-30 46 40)"/>' +
+    (id === 'sol' ? '' : '<circle cx="60" cy="60" r="' + radio + '" fill="url(#' + sombra + ')"/>') + rim +
+    '<ellipse cx="45" cy="38" rx="10" ry="5.5" fill="#fff" opacity="' + (id === 'sol' ? '.4' : '.2') + '" transform="rotate(-32 45 38)"/>' +
     delante + '</svg>';
 }
 
@@ -243,9 +272,23 @@ function relojSVG(h, m, op) {
     const a = i * 6 * Math.PI / 180;
     marcas += '<circle cx="' + (60 + Math.sin(a) * 50).toFixed(1) + '" cy="' + (60 - Math.cos(a) * 50).toFixed(1) + '" r="1.6" fill="#9B7BF7"/>';
   }
+  // Minutos alrededor de la esfera (nivel de 7 a 8 años): 5, 10, 15...
+  let minutos = '';
+  if (op.minutos) {
+    for (let i = 0; i < 60; i += 5) {
+      const a = i * 6 * Math.PI / 180;
+      minutos += '<text class="min-txt" x="' + (60 + Math.sin(a) * 67).toFixed(1) + '" y="' + (60 - Math.cos(a) * 67 + 3.6).toFixed(1) + '" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="10" fill="#E2368A">' + String(i).padStart(2, '0') + '</text>';
+    }
+    for (let i = 0; i < 60; i++) {
+      if (i % 5 === 0) continue;
+      const a = i * 6 * Math.PI / 180;
+      marcas += '<circle cx="' + (60 + Math.sin(a) * 50.5).toFixed(1) + '" cy="' + (60 - Math.cos(a) * 50.5).toFixed(1) + '" r=".8" fill="#C9B8FF"/>';
+    }
+  }
   const xh = 60 + Math.sin(angH) * 24, yh = 60 - Math.cos(angH) * 24;
   const xm = 60 + Math.sin(angM) * 36, ym = 60 - Math.cos(angM) * 36;
-  return '<svg class="reloj-svg" viewBox="0 0 120 120" aria-hidden="true">' +
+  return '<svg class="reloj-svg' + (op.minutos ? ' con-minutos' : '') + (op.verMinutos ? ' ver-min' : '') + '" viewBox="' + (op.minutos ? '-18 -18 156 156' : '0 0 120 120') + '" aria-hidden="true">' +
+    (op.minutos ? '<circle cx="60" cy="60" r="77" class="min-aro" fill="#FFF0F7" opacity="0"/>' + minutos : '') +
     '<circle cx="60" cy="60" r="56" fill="#fff" stroke="' + (op.borde || '#9B7BF7') + '" stroke-width="6"/>' + marcas + numeros +
     '<line class="aguja-m" x1="60" y1="60" x2="' + xm.toFixed(1) + '" y2="' + ym.toFixed(1) + '" stroke="#FF5DA2" stroke-width="4.5" stroke-linecap="round"/>' +
     '<line class="aguja-h" x1="60" y1="60" x2="' + xh.toFixed(1) + '" y2="' + yh.toFixed(1) + '" stroke="#2A1E5C" stroke-width="7" stroke-linecap="round"/>' +

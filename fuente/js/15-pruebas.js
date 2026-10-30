@@ -4,6 +4,7 @@
      sin negativos ni fuera de rango, varias soluciones aceptadas.
    - Frases: todas existen, en español y con plurales correctos.
    - Datos de ciencia iguales a la lista aprobada.
+   - Los 3 niveles por edad tienen sus 60 niveles con actividades válidas.
    - Los 60 niveles se desbloquean en orden; partida completa simulada;
      guardado y recuperación del progreso.
    - Cada actividad se juega de verdad en pantalla (acierto y camino de pistas).
@@ -20,6 +21,15 @@ const Pruebas = {
     partes.forEach(id => { if (typeof FRASES === 'undefined' || !FRASES[id]) this.frasesQueFaltan[id] = (this.frasesQueFaltan[id] || 0) + 1; });
   },
 
+  /* Planeta donde se practica una habilidad (en el primer nivel por edad que la tenga) */
+  mundoDe(hab) {
+    for (let n = 0; n < NIVELES.length; n++) {
+      const b = NIVELES[n].id;
+      for (let i = 0; i < MUNDOS.length; i++) { const c = cur(i, b); if (c.habs.concat(c.mision, c.aprende).indexOf(hab) >= 0) return i; }
+    }
+    return 0;
+  },
+
   ok(nombre, condicion, detalle) {
     this.resultados.push({ nombre: nombre, ok: !!condicion, detalle: condicion ? '' : (detalle || '') });
     return !!condicion;
@@ -30,14 +40,14 @@ const Pruebas = {
     const habs = Object.keys(ACTIVIDADES).concat(['ciencia']);
     let total = 0;
     const fallos = [];
-    const revisarIds = (lista, q, campo) => (lista || []).forEach(id => { if (!FRASES[id]) fallos.push(q.hab + ' ' + campo + ': falta la frase ' + id); });
+    const revisarIds = (lista, q, campo) => aplanar([lista || []]).forEach(id => { if (!FRASES[id]) fallos.push(q.hab + ' ' + campo + ': falta la frase ' + id); });
     habs.forEach(hab => {
       for (let dif = 0; dif <= 2; dif++) {
         Azar.sembrar(1000 + dif * 7 + hab.length * 131);
         for (let k = 0; k < 200; k++) {
           total++;
           let q;
-          const mundo = hab === 'ciencia' ? azar(0, 9) : (MUNDO_DE_HAB[hab] || 0);
+          const mundo = hab === 'ciencia' ? azar(0, 9) : this.mundoDe(hab);
           try { q = crearReto(hab, dif, { mundo: mundo, tipo: 'practica' }); } catch (e) { fallos.push(hab + ' d' + dif + ': excepción ' + e.message); break; }
           q.hab = q.hab || hab;
           if (!q.firma) fallos.push(hab + ': sin firma');
@@ -79,6 +89,10 @@ const Pruebas = {
     const malos = pl.filter(x => JSON.stringify(x[0]) !== JSON.stringify(x[1]));
     this.ok('Plurales y género ("una estrella", "un euro", "es la una")', !malos.length, malos.map(x => x[0].join(' ')).join(' | '));
     this.ok('Textos de plural en las frases', FRASES.o_estrella_s === 'estrella.' && FRASES.o_pez_p === 'peces.' && FRASES.dame_1 === 'Dame una galleta.' && FRASES.h1_00 === 'la una en punto.', '');
+    // Números grandes: se componen con las centenas (nivel de 7 a 8 años)
+    const t1 = Voz.texto(['toca_el', N(342)]), t2 = Voz.texto([N(105)]), t3 = Voz.texto(['son_las'].concat(horaHablada(3, 45)));
+    this.ok('Números hasta 1000 y horas con minutos se dicen bien', JSON.stringify(N(342)) === '["cc300","n42"]' && N(300) === 'n300' && N(1000) === 'n1000' && N(100) === 'n100' &&
+      t1 === 'Toca el trescientos cuarenta y dos.' && t2 === 'ciento cinco.' && t3 === 'Son las cuatro menos cuarto.', [t1, t2, t3].join(' | '));
     const sinVoz = [];
     VOCES_PIPO.filter(v => v.id !== 'sistema').forEach(v => {
       const paquete = Voz.clips(v.id);
@@ -120,21 +134,57 @@ const Pruebas = {
   /* ---------- 4. Planes de nivel ---------- */
   probarPlanes() {
     const fallos = [];
-    MUNDOS.forEach((m, i) => TIPOS_NIVEL.forEach(t => {
-      if (t.id === 'descubre') return;
-      for (let k = 0; k < 20; k++) {
-        const plan = planNivel(i, t.id);
-        if (plan.length !== t.retos) fallos.push(m.id + '/' + t.id + ': ' + plan.length + ' retos');
-        plan.forEach(h => { if (h !== 'ciencia' && !ACTIVIDADES[h]) fallos.push(m.id + '/' + t.id + ': habilidad desconocida ' + h); });
-      }
-    }));
-    this.ok('Planes de los 60 niveles (6-10 retos, habilidades válidas)', !fallos.length, fallos.slice(0, 6).join(' | '));
+    const p = Guardado.p, antes = p.banda;
+    NIVELES.forEach(n => {
+      p.banda = n.id;
+      MUNDOS.forEach((m, i) => {
+        const c = cur(i);
+        if (!c || !c.tema || c.aprende.length < 2 || c.mision.length < 3) fallos.push(n.id + '/' + m.id + ': plan incompleto');
+        c.habs.concat(c.aprende, c.mision).forEach(h => {
+          if (h !== 'ciencia' && h !== 'repaso' && !ACTIVIDADES[h]) fallos.push(n.id + '/' + m.id + ': actividad desconocida ' + h);
+          if (!HABILIDADES[h]) fallos.push('sin nombre para los padres: ' + h);
+          if (EDAD_HAB[h] === undefined) fallos.push('sin edad: ' + h);
+        });
+        c.aprende.forEach(h => { const q = crearReto(h, 0, { mundo: i }); if (!q.ensenar && !q.demo && !q.pista) fallos.push(n.id + '/' + m.id + ': ' + h + ' no se puede enseñar'); });
+        if (c.misionFrase && !FRASES[c.misionFrase]) fallos.push('falta ' + c.misionFrase);
+        TIPOS_NIVEL.forEach(t => {
+          if (t.id === 'descubre') return;
+          for (let k = 0; k < 12; k++) {
+            const plan = planNivel(i, t.id);
+            if (plan.length !== t.retos) fallos.push(n.id + '/' + m.id + '/' + t.id + ': ' + plan.length + ' retos');
+            plan.forEach(h => { if (h !== 'ciencia' && !ACTIVIDADES[h]) fallos.push(m.id + '/' + t.id + ': habilidad desconocida ' + h); });
+          }
+        });
+      });
+    });
+    // Todas las actividades se usan en algún nivel
+    const usadas = {};
+    NIVELES.forEach(n => MUNDOS.forEach((m, i) => { const c = cur(i, n.id); c.habs.concat(c.aprende, c.mision).forEach(h => { usadas[h] = true; }); }));
+    Object.keys(ACTIVIDADES).filter(h => h !== 'palabras' && !usadas[h]).forEach(h => fallos.push('actividad sin usar: ' + h));
+    p.banda = antes;
+    this.ok('Planes de los 3 niveles por edad × 60 niveles (actividades válidas, todas usadas)', !fallos.length, fallos.slice(0, 6).join(' | '));
+    // Dificultad de partida según la edad
+    const d = (banda, h) => Guardado.difInicial({ banda: banda, libres: 0 }, h);
+    this.ok('Dificultad inicial según el nivel por edad', d('a', 'sumas') === 0 && d('b', 'sumas') === 1 && d('c', 'sumas') === 2 && d('c', 'sumaDecenas') === 1 && d('c', 'tablas') === 0 && d('a', 'grupos') === 0,
+      [d('a', 'sumas'), d('b', 'sumas'), d('c', 'sumas'), d('c', 'sumaDecenas'), d('c', 'tablas')].join(','));
+  },
+
+  /* ---------- 4b. Dibujos propios ---------- */
+  probarDibujos() {
+    const sinDibujo = Object.keys(EMOJI_ICO).filter(e => !ICO[EMOJI_ICO[e]]);
+    const simbolos = $$('#spriteIconos symbol').length;
+    const caja = crear('div', '', '<span class="emo">⭐🚀🦊</span> hola');
+    document.body.appendChild(caja);
+    Iconos.convertir(caja);
+    const ok = caja.querySelectorAll('.ico-d').length === 3 && caja.textContent.indexOf('hola') >= 0;
+    caja.remove();
+    this.ok('Dibujos propios: ' + Object.keys(ICO).length + ' dibujos y ' + Object.keys(EMOJI_ICO).length + ' emojis sustituidos', !sinDibujo.length && simbolos === Object.keys(ICO).length && ok, sinDibujo.join(',') + ' símbolos=' + simbolos + ' conversión=' + ok);
   },
 
   /* ---------- 5. Partida completa simulada (lógica) ---------- */
   probarPartidaCompleta() {
     const fallos = [];
-    const p = Guardado.crearPerfil({ avatar: 'oso', edad: 5, voz: 'bruno' });
+    const p = Guardado.crearPerfil({ avatar: 'oso', banda: 'a', voz: 'bruno' });
     if (!p) { this.ok('Partida simulada', false, 'no se pudo crear el perfil'); return; }
     MUNDOS.forEach((m, i) => {
       if (!Mapa.desbloqueado(i)) fallos.push('mundo ' + (i + 1) + ' no se desbloquea');
@@ -169,13 +219,19 @@ const Pruebas = {
     // Datos antiguos o rotos no rompen el juego
     try {
       const r = Guardado.repararPerfil({ id: 'x', edad: 'abc', avatar: '🦊', habs: { contar: { dif: 9, hist: [1] }, roto: 5 }, pipo: { color: 'nada' } });
-      this.ok('Datos guardados antiguos o rotos se reparan', r.edad === 5 && r.avatar === 'zorro' && r.habs.contar.dif === 2 && !r.habs.roto && r.pipo.color === 'menta');
+      const v3a = Guardado.repararPerfil({ id: 'y', edad: 7, pruebaHecha: false }), v3b = Guardado.repararPerfil({ id: 'z', edad: 5 }), v4 = Guardado.repararPerfil({ id: 'w', banda: 'c' });
+      this.ok('Datos guardados antiguos o rotos se reparan (y los perfiles de la versión 3 reciben su nivel)', r.banda === 'a' && r.edad === undefined && r.avatar === 'zorro' && r.habs.contar.dif === 2 && !r.habs.roto && r.pipo.color === 'menta' &&
+        v3a.banda === 'b' && v3a.pruebaHecha && v3b.banda === 'a' && v4.banda === 'c');
+      const q = Guardado.crearPerfil({ avatar: 'leon', banda: 'c', voz: 'lola' });
+      Guardado.p.habs.sumas = { dif: 2, hist: [], n: 0, ok: 0, seguidas: 2, ultima: null, t: 0 };
+      Guardado.cambiarNivel(Guardado.p, 'a');
+      this.ok('Cambiar de nivel en la zona de padres recoloca la dificultad', !!q && Guardado.p.banda === 'a' && Guardado.p.habs.sumas.dif === 0, JSON.stringify(Guardado.p.habs.sumas));
     } catch (e) { this.ok('Datos guardados antiguos o rotos se reparan', false, e.message); }
   },
 
   /* ---------- 6. Juego real en pantalla ---------- */
   async jugarReto(hab, dif, modo) {
-    const mundo = hab === 'ciencia' ? 0 : (MUNDO_DE_HAB[hab] || 0);
+    const mundo = hab === 'ciencia' ? 0 : this.mundoDe(hab);
     let terminado = false;
     Juego.empezar(mundo, 'practica', { modo: 'nivel', plan: [{ hab: hab, dif: dif }], alFinal: () => { terminado = true; } });
     await esperar(60);
@@ -227,7 +283,7 @@ const Pruebas = {
     }
     this.ok('Juego en pantalla: ' + jugados + ' retos resueltos tocando como un niño', !fallos.length, fallos.slice(0, 8).join(' | '));
     const fallos2 = [];
-    const conOpciones = habs.filter(h => { const q = crearReto(h, 1, { mundo: MUNDO_DE_HAB[h] || 0 }); return h !== 'descomponer' && !q.accion && !q.validas && q.opciones && q.opciones.length >= 3; });
+    const conOpciones = habs.filter(h => { const q = crearReto(h, 1, { mundo: this.mundoDe(h) }); return h !== 'descomponer' && !q.accion && !q.validas && q.opciones && q.opciones.length >= 3; });
     for (const hab of conOpciones) {
       Azar.sembrar(5 + hab.length);
       const r = await this.jugarReto(hab, 1, 'fallos');
@@ -260,7 +316,16 @@ const Pruebas = {
       this.ok('Flujo completo: premio → planeta', UI.pantalla === 'p-mundo', 'pantalla: ' + UI.pantalla);
       Mapa.abrir({});
       await esperar(100);
-      this.ok('Mapa del sistema solar con 10 mundos', $$('#mapaNodos .planeta').length === 10);
+      this.ok('Mapa del viaje con 10 mundos', $$('#mapaNodos .planeta').length === 10);
+      $('#btnSeguirViaje').click();
+      await esperar(120);
+      this.ok('Botón grande del mapa: directo al siguiente nivel', UI.pantalla === 'p-juego' && Juego.tipo && Juego.tipo.id === 'practica', 'pantalla: ' + UI.pantalla);
+      Juego.salir();
+      await esperar(120);
+      this.ok('Salir de un nivel lleva a la pantalla del planeta', UI.pantalla === 'p-mundo' && $$('#mundoCamino .nivel').length === 6 && !$('#btnJugarNivel').hidden, 'pantalla: ' + UI.pantalla);
+      this.ok('En pantalla se ven dibujos propios (no emojis)', $$('#p-mundo .ico-d').length >= 6, 'dibujos: ' + $$('#p-mundo .ico-d').length);
+      Mapa.abrir({});
+      await esperar(80);
       Album.abrir(); await esperar(50);
       this.ok('Álbum con 20 cartas', $$('#albumRejilla .casilla').length === 20);
       Taller.abrir(); await esperar(50);
@@ -287,15 +352,15 @@ const Pruebas = {
     const t0 = Date.now();
     try {
       Guardado.datos = Guardado.porDefecto();
-      Guardado.crearPerfil({ avatar: 'zorro', edad: 7, voz: 'lola' });
-      Guardado.p.pruebaHecha = true;
+      Guardado.crearPerfil({ avatar: 'zorro', banda: 'c', voz: 'lola' });
       this.probarFrases();
       this.probarCiencia();
       this.probarGeneradores();
       this.probarPlanes();
+      this.probarDibujos();
       this.probarPartidaCompleta();
       Guardado.datos = Guardado.porDefecto();
-      Guardado.crearPerfil({ avatar: 'panda', edad: 6, voz: 'cosmo' }).pruebaHecha = true;
+      Guardado.crearPerfil({ avatar: 'panda', banda: 'b', voz: 'cosmo' });
       await this.probarEnPantalla();
       await this.probarFlujoNivel();
     } catch (e) {

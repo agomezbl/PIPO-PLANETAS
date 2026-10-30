@@ -24,9 +24,9 @@ function tecladoNumerico(cont, alAceptar, maxCifras) {
     pad.appendChild(b);
     return b;
   };
-  [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(n => tecla(String(n), '', () => { if (valor.length < (maxCifras || 3)) { valor += n; pintar(); Voz.decir(N(Number(valor) <= 100 ? Number(valor) : n)); } }));
+  [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(n => tecla(String(n), '', () => { if (valor.length < (maxCifras || 3)) { valor += n; pintar(); Voz.decir(N(Number(valor))); } }));
   tecla(ICONOS.borrar, 'tecla-borrar', () => { valor = valor.slice(0, -1); pintar(); }, 'Borrar');
-  tecla('0', '', () => { if (valor.length && valor.length < (maxCifras || 3)) { valor += '0'; pintar(); Voz.decir(N(Number(valor) <= 100 ? Number(valor) : 0)); } });
+  tecla('0', '', () => { if (valor.length && valor.length < (maxCifras || 3)) { valor += '0'; pintar(); Voz.decir(N(Number(valor))); } });
   const ok = tecla(ICONOS.check, 'tecla-ok btn-listo', () => { if (valor) alAceptar(Number(valor), ok, () => { valor = ''; pintar(); }); }, 'Listo');
   cont.appendChild(pantalla);
   cont.appendChild(pad);

@@ -5,14 +5,16 @@
    - Si había partida de la versión 2, se convierte en el primer perfil.
    ========================================================= */
 
-/* Mundo donde aparece por primera vez cada habilidad */
-const MUNDO_DE_HAB = {};
-MUNDOS.forEach((m, i) => {
-  m.habs.concat(m.mision.habs, m.aprende).forEach(h => { if (!(h in MUNDO_DE_HAB)) MUNDO_DE_HAB[h] = i; });
-});
-MUNDO_DE_HAB.palabras = 3;
-MUNDO_DE_HAB.ciencia = 0;
-MUNDO_DE_HAB.repaso = 9;
+/* Mundo donde aparece por primera vez cada habilidad, en cada nivel */
+function mundoDeHab(hab, banda) {
+  if (hab === 'palabras') return 3;
+  if (hab === 'ciencia') return 0;
+  for (let i = 0; i < MUNDOS.length; i++) {
+    const c = cur(i, banda);
+    if (c.habs.indexOf(hab) >= 0 || c.mision.indexOf(hab) >= 0 || c.aprende.indexOf(hab) >= 0) return i;
+  }
+  return 0;
+}
 
 const Guardado = {
   disponible: true,
@@ -36,7 +38,7 @@ const Guardado = {
   },
 
   porDefecto() {
-    return { v: 3, ajustes: this.ajustesPorDefecto(), perfiles: [], actual: null, creado: hoyISO() };
+    return { v: 4, ajustes: this.ajustesPorDefecto(), perfiles: [], actual: null, creado: hoyISO() };
   },
 
   perfilPorDefecto() {
@@ -44,7 +46,7 @@ const Guardado = {
       id: '',
       nombre: '',
       avatar: 'zorro',
-      edad: 5,
+      banda: 'a',            // nivel por edad: a (5-6), b (6-7), c (7-8)
       voz: 'lola',
       estrellas: 0,
       desbloqueados: 1,      // mundos que se pueden visitar
@@ -109,7 +111,9 @@ const Guardado = {
     const p = fusionar(this.perfilPorDefecto(), g);
     p.id = String(g.id);
     p.nombre = String(p.nombre || '').slice(0, 24);
-    p.edad = limitar(Number(p.edad) || 5, 5, 7);
+    p.banda = NIVEL[g.banda] ? g.banda : (Number(g.edad) >= 6 ? 'b' : 'a');   // perfiles de la versión 3 (edad 5, 6 o 7)
+    delete p.edad;
+    p.pruebaHecha = true;
     p.estrellas = limitar(Number(p.estrellas) || 0, 0, 99999);
     p.desbloqueados = limitar(p.desbloqueados | 0, 1, MUNDOS.length);
     p.libres = limitar(p.libres | 0, 0, MUNDOS.length);
@@ -186,9 +190,9 @@ const Guardado = {
     p.id = this.nuevoId();
     p.avatar = AVATARES.some(a => a.id === op.avatar) ? op.avatar : AVATARES[this.datos.perfiles.length % AVATARES.length].id;
     p.nombre = String(op.nombre || '').slice(0, 24);
-    p.edad = limitar(Number(op.edad) || 5, 5, 7);
+    p.banda = NIVEL[op.banda] ? op.banda : 'a';
     if (VOCES_PIPO.some(v => v.id === op.voz)) p.voz = op.voz;
-    p.pruebaHecha = p.edad <= 5;   // con 5 años se empieza por la Tierra, sin prueba
+    p.pruebaHecha = true;   // el nivel elegido decide el contenido: no hace falta prueba inicial
     this.datos.perfiles.push(p);
     this.datos.actual = p.id;
     this.guardar();
@@ -208,12 +212,17 @@ const Guardado = {
     this.guardar();
   },
 
-  /* Resultado de la prueba inicial: se abren enteros los mundos anteriores al de inicio */
-  aplicarPrueba(p, mundoInicio) {
-    const i = limitar(mundoInicio | 0, 0, MUNDOS.length - 1);
-    p.pruebaHecha = true;
-    p.libres = Math.max(p.libres, i);
-    p.desbloqueados = Math.max(p.desbloqueados, i + 1);
+  /* Cambia el nivel por edad de un perfil (se conserva todo lo conseguido) */
+  cambiarNivel(p, banda) {
+    if (!NIVEL[banda] || p.banda === banda) return;
+    const antes = p.banda;
+    p.banda = banda;
+    // La dificultad de cada habilidad se recoloca según el nuevo nivel (sin perder el historial)
+    Object.keys(p.habs).forEach(h => {
+      const d = this.difInicial(p, h) - this.difInicial(Object.assign({}, p, { banda: antes }), h);
+      p.habs[h].dif = limitar(p.habs[h].dif + d, 0, DIFICULTAD_MAX);
+      p.habs[h].seguidas = 0;
+    });
     this.guardar();
   },
 
@@ -224,11 +233,11 @@ const Guardado = {
     this.guardar();
   },
 
-  /* Borra el progreso de un perfil (se conservan nombre, avatar, edad y voz) */
+  /* Borra el progreso de un perfil (se conservan nombre, avatar, nivel y voz) */
   reiniciarPerfil(p) {
     const nuevo = this.perfilPorDefecto();
-    ['id', 'nombre', 'avatar', 'edad', 'voz', 'creado'].forEach(k => { nuevo[k] = p[k]; });
-    nuevo.pruebaHecha = nuevo.edad <= 5;
+    ['id', 'nombre', 'avatar', 'banda', 'voz', 'creado'].forEach(k => { nuevo[k] = p[k]; });
+    nuevo.pruebaHecha = true;
     const i = this.datos.perfiles.indexOf(p);
     if (i >= 0) this.datos.perfiles[i] = nuevo;
     this.guardar();
@@ -255,10 +264,13 @@ const Guardado = {
   },
 
   /* ---------- Dominio por habilidad ---------- */
+  /* Dificultad con la que empieza una habilidad: depende del nivel por edad
+     (lo que es fácil para su edad empieza más arriba) y de los mundos abiertos por los padres */
   difInicial(p, hab) {
-    const w = MUNDO_DE_HAB[hab] || 0;
-    if (w < p.libres) return (p.edad >= 7 && w < 3) ? 2 : 1;
-    return 0;
+    const n = NIVEL[nivelDe(p)];
+    let d = Math.round(n.edad - (EDAD_HAB[hab] || 5));
+    if (mundoDeHab(hab, n.id) < p.libres) d++;
+    return limitar(d, 0, DIFICULTAD_MAX);
   },
 
   hab(id) {

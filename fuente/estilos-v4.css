@@ -1,0 +1,321 @@
+/* =========================================================
+   20. VERSIÓN 4: dibujos propios, cielos por planeta, mapa del viaje
+       en un camino, pantalla del planeta con su camino de niveles,
+       botón grande de seguir jugando, niveles por edad y actividades
+       de 7 a 8 años.
+   ========================================================= */
+
+/* ---------- Dibujos propios (sustituyen a los emojis) ---------- */
+#app svg.ico-d, .ico-d { display: inline-block; width: 1.18em; height: 1.18em; vertical-align: -.2em; flex: 0 0 auto; overflow: visible; pointer-events: none; }
+.emo .ico-d, .chip-ico .ico-d { vertical-align: -.16em; }
+#app .obj-e .ico-d, #app .tv-emo .ico-d, #app .tp-avatar .ico-d, #app .opcion-avatar .ico-d { width: 1.12em; height: 1.12em; }
+
+/* ---------- Cielo: nebulosas con el color de cada planeta ---------- */
+:root { --neb1: rgba(91, 75, 219, .55); --neb2: rgba(255, 93, 162, .32); --neb3: rgba(63, 178, 242, .26); }
+#cielo {
+  background:
+    radial-gradient(70% 45% at 82% 8%, var(--neb2), rgba(0, 0, 0, 0) 70%),
+    radial-gradient(60% 40% at 6% 36%, var(--neb3), rgba(0, 0, 0, 0) 70%),
+    radial-gradient(130% 62% at 50% 118%, var(--neb1) 0%, rgba(0, 0, 0, 0) 64%),
+    radial-gradient(40% 25% at 70% 60%, rgba(255, 255, 255, .05), rgba(0, 0, 0, 0) 70%),
+    linear-gradient(180deg, #1A1048 0%, #2C1F7A 55%, #4A33A8 100%);
+  transition: background 1s ease;
+}
+#cielo::before, #cielo::after {
+  content: ''; position: absolute; border-radius: 50%; pointer-events: none;
+}
+/* Galaxia lejana y un planeta de fondo (decorativos) */
+#cielo::before { width: 38vmin; height: 12vmin; left: 6%; top: 12%; background: radial-gradient(closest-side, rgba(255, 255, 255, .22), rgba(169, 139, 250, .12) 55%, rgba(0, 0, 0, 0)); transform: rotate(-24deg); filter: blur(2px); }
+#cielo::after { width: 22vmin; height: 22vmin; right: -6vmin; bottom: 14%; background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .16), rgba(255, 255, 255, .03) 60%, rgba(0, 0, 0, 0) 72%); }
+body[data-tema="tierra"] { --neb1: rgba(43, 111, 214, .6); --neb2: rgba(27, 179, 138, .32); --neb3: rgba(63, 178, 242, .3); }
+body[data-tema="luna"] { --neb1: rgba(130, 136, 190, .5); --neb2: rgba(200, 205, 240, .22); --neb3: rgba(90, 95, 143, .3); }
+body[data-tema="marte"] { --neb1: rgba(194, 70, 42, .55); --neb2: rgba(255, 140, 90, .3); --neb3: rgba(122, 42, 92, .3); }
+body[data-tema="venus"] { --neb1: rgba(217, 150, 62, .5); --neb2: rgba(255, 210, 120, .3); --neb3: rgba(176, 74, 122, .28); }
+body[data-tema="mercurio"] { --neb1: rgba(150, 128, 112, .5); --neb2: rgba(255, 190, 120, .26); --neb3: rgba(91, 75, 219, .3); }
+body[data-tema="jupiter"] { --neb1: rgba(201, 143, 90, .55); --neb2: rgba(226, 119, 79, .3); --neb3: rgba(122, 58, 42, .3); }
+body[data-tema="saturno"] { --neb1: rgba(194, 149, 72, .5); --neb2: rgba(246, 226, 168, .26); --neb3: rgba(91, 75, 219, .3); }
+body[data-tema="urano"] { --neb1: rgba(63, 169, 188, .55); --neb2: rgba(184, 255, 248, .24); --neb3: rgba(42, 111, 176, .3); }
+body[data-tema="neptuno"] { --neb1: rgba(36, 66, 200, .62); --neb2: rgba(127, 161, 255, .3); --neb3: rgba(91, 43, 176, .3); }
+body[data-tema="sol"] { --neb1: rgba(255, 138, 31, .55); --neb2: rgba(255, 210, 63, .32); --neb3: rgba(217, 41, 79, .3); }
+
+/* ---------- Pulido general ---------- */
+.btn { background-image: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 55%); }
+.chip { background: rgba(20, 10, 70, .38); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .2), 0 4px 12px rgba(10, 0, 40, .25); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.chip-nivel { --c: var(--menta); background: var(--c); color: #fff; padding: 0 .6em; font-size: clamp(16px, 3.4vmin, 24px); text-shadow: 0 1px 0 rgba(0, 0, 0, .2); box-shadow: 0 4px 0 rgba(0, 0, 0, .22); }
+.escena { background: linear-gradient(180deg, #FFFFFF 0%, #F6F2FF 100%); }
+.respuestas .opcion { border-radius: 30px; }
+.picto { font-family: var(--fuente); }
+.lienzo-marco { position: relative; margin: auto; flex: 0 0 auto; }
+.ruta-svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.ruta-fondo { fill: none; stroke: rgba(255, 255, 255, .12); stroke-width: 26; stroke-linecap: round; stroke-linejoin: round; }
+.ruta-puntos { fill: none; stroke: rgba(255, 255, 255, .55); stroke-width: 7; stroke-linecap: round; stroke-dasharray: .1 20; }
+.ruta-hecha { fill: none; stroke: var(--sol); stroke-width: 9; stroke-linecap: round; stroke-dasharray: .1 20; filter: drop-shadow(0 0 6px rgba(255, 201, 60, .8)); }
+
+/* ---------- Botón grande de jugar (mapa y planeta) ---------- */
+.btn-viaje {
+  --c: var(--chicle); --c-osc: var(--chicle-osc);
+  position: absolute; z-index: 6;
+  right: calc(env(safe-area-inset-right) + var(--pad) * 1.6);
+  bottom: calc(env(safe-area-inset-bottom) + var(--pad) * 1.6);
+  width: clamp(96px, 19vmin, 150px); height: clamp(96px, 19vmin, 150px);
+  border-radius: 50%;
+  box-shadow: 0 8px 0 var(--c-osc), 0 0 0 6px rgba(255, 255, 255, .9), 0 16px 34px rgba(16, 6, 60, .5);
+  animation: latido-boton 1.8s ease-in-out infinite;
+}
+.btn-viaje:active { box-shadow: 0 2px 0 var(--c-osc), 0 0 0 6px rgba(255, 255, 255, .9); }
+.btn-viaje .bv-jugar { width: 44%; height: 44%; margin-left: 8%; }
+.bv-mini { position: absolute; left: -12%; top: -12%; width: 46%; height: 46%; border-radius: 50%; background: #fff; display: grid; place-items: center; font-size: clamp(22px, 5vmin, 38px); box-shadow: 0 4px 0 var(--luna-borde); }
+#app .bv-mini .ico-d { width: 72%; height: 72%; vertical-align: 0; }
+@keyframes latido-boton { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+
+/* ---------- Mapa del viaje ---------- */
+#p-mapa.activa { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "barra" "mapa" "menu"; }
+.mapa-zona { grid-area: mapa; display: flex; overflow: auto; overflow-x: hidden; border-radius: 0; }
+.mapa-lienzo, .mundo-lienzo { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+#mapaNodos .planeta { z-index: 2; }
+#mapaNodos .planeta-cuerpo svg { width: 128%; height: 128%; filter: drop-shadow(0 10px 18px rgba(8, 0, 40, .55)); }
+#mapaNodos .nodo-saturno .planeta-cuerpo svg { width: 150%; height: 150%; }
+#mapaNodos .nodo-sol .planeta-cuerpo svg { width: 132%; height: 132%; }
+#mapaNodos .planeta-num { width: 34px; height: 34px; min-width: 0; min-height: 0; font-size: 20px; left: -4px; top: -4px; z-index: 2; }
+#mapaNodos .planeta-insignia { width: 38px; height: 38px; min-width: 0; min-height: 0; right: -4px; bottom: 2px; z-index: 2; }
+#mapaNodos .planeta-nombre { transform: translate(-50%, 14px); font-size: 22px; display: flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: 999px; background: rgba(20, 10, 60, .45); }
+#mapaNodos .planeta-est { position: static; padding: 0; background: none; font-size: 18px; }
+#mapaNodos .planeta.actual::after { inset: -16%; border-width: 6px; }
+#mapaNodos .planeta.actual .planeta-nombre { background: var(--sol); color: var(--tinta); text-shadow: none; }
+#mapaNodos .planeta.actual .planeta-est path { fill: var(--tinta); }
+#mapaNodos .planeta.bloqueado .planeta-cuerpo { filter: grayscale(.85) brightness(.62); }
+#mapaNodos .planeta.bloqueado .planeta-nombre { opacity: .7; }
+.nave-mapa { width: 64px; transition: none; }
+.menu-mapa { grid-area: menu; gap: clamp(10px, 3vmin, 28px); justify-content: flex-start; padding-right: clamp(124px, 24vmin, 180px); }
+.btn-menu { flex-direction: column; gap: 2px; width: clamp(78px, 15vmin, 112px); height: clamp(78px, 15vmin, 108px); border-radius: 30%; }
+.btn-menu .emo { font-size: clamp(32px, 6.4vmin, 50px); }
+.menu-txt { font-size: clamp(12px, 2.3vmin, 17px); line-height: 1; text-shadow: 0 1px 0 rgba(0, 0, 0, .25); }
+@media (orientation: landscape) {
+  #p-mapa.activa { grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "barra barra" "menu mapa"; }
+  .menu-mapa { flex-direction: column; justify-content: center; padding-right: 0; padding-bottom: clamp(60px, 14vmin, 120px); }
+}
+
+/* ---------- Pantalla de un planeta ---------- */
+#p-mundo.activa { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "barra" "zona" "extras"; }
+.mundo-zona { grid-area: zona; display: flex; overflow: auto; overflow-x: hidden; }
+.mundo-planeta { position: absolute; width: var(--s, 300px); height: var(--s, 300px); transform: translate(-50%, -50%); display: block; }
+.mundo-planeta > svg { width: 100%; height: 100%; max-width: none; max-height: none; overflow: visible; animation: flotar 6s ease-in-out infinite; filter: drop-shadow(0 16px 36px rgba(8, 0, 40, .55)); }
+.mundo-pipo { left: -10%; right: auto; bottom: -6%; height: 40%; max-height: none; }
+.mundo-camino { display: block; position: absolute; inset: 0; padding: 0; }
+.nivel {
+  position: absolute; width: 132px; height: 132px; transform: translate(-50%, -50%); border-radius: 50%;
+  background: none; box-shadow: none; padding: 0;
+}
+.nivel:active, .nivel:nth-child(even), .nivel:nth-child(even):active { transform: translate(-50%, -50%); box-shadow: none; }
+.nivel-disco {
+  position: relative; width: 116px; height: 116px; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle at 34% 28%, #FFFFFF 0%, var(--c) 70%); box-shadow: 0 8px 0 var(--c-osc), 0 14px 26px rgba(16, 6, 60, .45), inset 0 -6px 0 rgba(0, 0, 0, .06);
+  transition: transform .1s ease;
+}
+.nivel:active .nivel-disco { transform: translateY(5px); box-shadow: 0 3px 0 var(--c-osc); }
+.nivel-ico { font-size: 62px; }
+.nivel-num { position: absolute; left: -6px; top: -6px; width: 38px; height: 38px; border-radius: 50%; background: var(--tinta); color: #fff; display: grid; place-items: center; font-size: 21px; box-shadow: 0 3px 0 rgba(0, 0, 0, .3); }
+.nivel-candado { right: -4px; top: -4px; width: 38px; height: 38px; }
+.nivel-estrellas { position: absolute; left: 50%; top: 100%; transform: translate(-50%, -2px); gap: 2px; padding: 3px 8px; border-radius: 999px; background: rgba(20, 10, 60, .55); }
+.nivel-estrellas i { width: 22px; }
+.nivel-estrellas path { fill: rgba(255, 255, 255, .25); stroke: rgba(255, 255, 255, .5); }
+.nivel-nombre { bottom: auto; top: calc(100% + 28px); left: 50%; transform: translateX(-50%); font-size: 22px; }
+.nivel.siguiente::after { inset: 0; border-radius: 50%; border-width: 6px; }
+.nivel.siguiente .nivel-disco { animation: latido 1.5s ease-in-out infinite; }
+.nivel.siguiente .nivel-ico { animation: none; }
+.nivel.bloqueado .nivel-disco { background: rgba(255, 255, 255, .22); box-shadow: 0 6px 0 rgba(0, 0, 0, .25); }
+.nivel.bloqueado .nivel-num { background: rgba(255, 255, 255, .5); color: var(--tinta); }
+.nivel.hecho .nivel-estrellas { background: rgba(20, 10, 60, .7); }
+.mundo-extras { grid-area: extras; justify-content: flex-start; padding-right: clamp(110px, 22vmin, 170px); min-height: clamp(70px, 13vmin, 100px); align-items: center; }
+.btn-extra { flex-direction: column; gap: 2px; }
+.btn-extra .emo { font-size: clamp(28px, 6vmin, 44px); }
+.btn-extra.hecho { color: var(--tinta); }
+.extra-txt { font-size: clamp(12px, 2.3vmin, 16px); line-height: 1; }
+@media (orientation: landscape) {
+  #p-mundo.activa { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "barra" "zona" "extras"; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  :root { --btn: 56px; }
+  #p-mundo.activa { grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "barra barra" "extras zona"; }
+  .mundo-extras { flex-direction: column; justify-content: flex-start; padding: 0 0 90px; min-height: 0; gap: 10px; }
+  .btn-extra { width: 62px; height: 58px; }
+  .extra-txt { display: none; }
+}
+
+/* ---------- Nuevo explorador: niveles por edad ---------- */
+.niveles-tarjetas { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(12px, 3vmin, 26px); width: 100%; }
+.tarjeta-nivel {
+  --c: var(--menta);
+  position: relative; border: 0; cursor: pointer; color: var(--tinta);
+  width: clamp(150px, 28vmin, 230px); min-height: clamp(170px, 32vmin, 250px); padding: 14px 10px 16px; border-radius: 30px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: #fff; box-shadow: 0 8px 0 var(--c), 0 14px 26px rgba(16, 6, 60, .35); transition: transform .1s ease;
+}
+.tarjeta-nivel::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 40%; border-radius: 30px 30px 50% 50% / 30px 30px 26px 26px; background: var(--c); opacity: .18; }
+.tarjeta-nivel:active { transform: translateY(5px); box-shadow: 0 3px 0 var(--c); }
+.tarjeta-nivel.elegida { box-shadow: 0 8px 0 var(--c), 0 0 0 6px var(--sol), 0 14px 26px rgba(16, 6, 60, .35); animation: salto .5s ease; }
+.tn-edad { position: relative; font-size: clamp(46px, 11vmin, 84px); font-weight: 700; line-height: .95; color: var(--c); text-shadow: 0 3px 0 rgba(0, 0, 0, .12); filter: brightness(.85); }
+.tn-anos { position: relative; font-size: clamp(16px, 3.4vmin, 24px); margin-top: -4px; }
+.tn-muestra { display: flex; align-items: center; gap: 8px; font-size: clamp(18px, 3.8vmin, 28px); padding: 4px 12px; border-radius: 14px; background: #F3EEFF; }
+.tn-muestra b { font-weight: 700; }
+.frac-mini { font-weight: 700; color: var(--chicle); }
+.tn-texto { font-size: clamp(13px, 2.5vmin, 17px); color: #5A4E8A; text-align: center; line-height: 1.15; }
+.nota-adulto { margin: 6px 0 0; font-size: clamp(13px, 2.4vmin, 16px); color: rgba(255, 255, 255, .85); text-align: center; max-width: 640px; }
+.nuevo-cuerpo.paso1 { flex-direction: column; }
+@media (orientation: landscape) and (max-height: 500px) {
+  .tarjeta-nivel { min-height: 0; padding: 10px 8px; gap: 3px; width: 168px; }
+  .tn-edad { font-size: 44px; }
+  .tn-texto { display: none; }
+}
+
+/* ---------- Perfiles: nivel de cada explorador ---------- */
+.tp-nivel { --c: var(--menta); position: absolute; right: -8px; top: -8px; padding: 3px 10px; border-radius: 999px; background: var(--c); color: #fff; font-size: clamp(14px, 2.8vmin, 19px); box-shadow: 0 3px 0 rgba(0, 0, 0, .25); }
+.tarjeta-perfil { position: relative; }
+.seg-nivel.activo { background: var(--c) !important; color: #fff !important; }
+.pp-temas li { margin: 4px 0; }
+
+/* ---------- Actividades de 7 a 8 años ---------- */
+/* Centenas, decenas y unidades */
+.lienzo.centenas { display: flex; align-items: center; justify-content: center; }
+.bloques1000 { display: flex; align-items: flex-end; justify-content: center; gap: 22px; width: 100%; height: 100%; padding: 8px; }
+.b1000-placas { display: grid; grid-template-columns: repeat(3, 92px); gap: 6px; align-content: end; }
+.bloques1000 .b10-barras { gap: 5px; }
+.bloques1000 .barra10 { height: 196px; width: 22px; }
+.bloques1000 .b10-cubos { grid-template-columns: repeat(3, 22px); gap: 4px; }
+.bloques1000 .cubo1 { width: 22px; height: 22px; }
+.placa100 {
+  position: relative; display: block; width: 92px; height: 92px; border-radius: 6px;
+  background-color: #2E9E78;
+  background-image: linear-gradient(90deg, rgba(255, 255, 255, .55) 1.5px, transparent 1.5px), linear-gradient(0deg, rgba(255, 255, 255, .55) 1.5px, transparent 1.5px);
+  background-size: 9.2px 9.2px; box-shadow: inset 0 0 0 3px #1E7A5A, 0 3px 0 #1E7A5A;
+}
+.placa100.contado { background-color: var(--sol); box-shadow: inset 0 0 0 3px var(--sol-osc), 0 3px 0 var(--sol-osc); }
+.placa100 .obj-num { left: 50%; top: 50%; right: auto; min-width: 54px; height: 40px; transform: translate(-50%, -50%) scale(0); font-size: 26px; }
+.placa100.contado .obj-num { transform: translate(-50%, -50%) scale(1); }
+.tira-cien { color: #1E7A5A; }
+
+/* Tabla de valor posicional C D U */
+.cdu { display: inline-flex; gap: 4px; vertical-align: middle; }
+.cdu-col { display: flex; flex-direction: column; align-items: center; min-width: 1.5em; border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 2px 0 rgba(0, 0, 0, .12); }
+.cdu-col i { font-style: normal; font-size: .5em; width: 100%; text-align: center; color: #fff; padding: 1px 0; }
+.cdu-col b { font-size: .9em; line-height: 1.2; color: var(--tinta); }
+.cdu-c i { background: #2E9E78; } .cdu-d i { background: var(--lila-osc); } .cdu-u i { background: var(--chicle); }
+.signos-grandes .sg-num { font-size: clamp(46px, 11vmin, 96px); }
+.signos-grandes .sg-barras { font-size: clamp(22px, 4.6vmin, 36px); margin-top: 6px; }
+.num-largo { font-size: .72em; letter-spacing: -.02em; }
+.cartas-grandes .carta { border-radius: 22px; }
+
+/* Series de números */
+.lienzo.serie-num { display: flex; align-items: center; justify-content: center; gap: 0; }
+.sn-carta { width: 104px; height: 104px; border-radius: 26px; background: #fff; display: grid; place-items: center; font-size: 40px; font-weight: 700; color: var(--tinta); box-shadow: 0 6px 0 var(--luna-borde), 0 8px 16px rgba(16, 6, 60, .12); transition: transform .2s ease; }
+.sn-carta.hueco { background: #FFF4CC; color: var(--sol-osc); box-shadow: 0 6px 0 var(--sol-osc); border: 4px dashed var(--sol-osc); font-size: 48px; }
+.sn-carta.resuelto { color: var(--tinta); border-style: solid; }
+.sn-carta.leyendo { transform: scale(1.12); box-shadow: 0 0 0 5px var(--sol), 0 6px 0 var(--luna-borde); }
+.salto { width: 26px; display: flex; justify-content: center; align-self: flex-start; margin-top: -6px; font-size: 22px; font-weight: 700; color: var(--chicle); opacity: 0; transform: translateY(8px); transition: opacity .3s ease, transform .3s ease; white-space: nowrap; }
+.salto.visible { opacity: 1; transform: none; }
+
+/* Cuentas en columnas (llevadas) */
+.lienzo.llevar { display: flex; align-items: center; justify-content: center; }
+.col-op { display: flex; flex-direction: column; align-items: flex-end; padding: 14px 22px 18px; border-radius: 26px; background: #FFFDF5; box-shadow: inset 0 0 0 3px #EDE3C8; background-image: linear-gradient(rgba(63, 178, 242, .12) 1px, transparent 1px); background-size: 100% 52px; }
+.co-fila { display: flex; align-items: center; }
+.co-signo { width: 64px; font-size: 64px; font-weight: 700; color: var(--chicle); text-align: center; line-height: 1; }
+.co-c { position: relative; width: 74px; display: flex; justify-content: center; align-items: center; transition: background .25s ease; border-radius: 14px; }
+.co-a .co-c, .co-b .co-c { height: 74px; font-size: 64px; font-weight: 700; color: var(--tinta); }
+.co-cab .co-c { height: 30px; }
+.co-cab i { font-style: normal; font-size: 20px; color: #fff; width: 40px; text-align: center; border-radius: 8px; }
+.cab-c { background: #2E9E78; } .cab-d { background: var(--lila-osc); } .cab-u { background: var(--chicle); }
+.co-llevo .co-c { height: 36px; }
+.co-llevo i { font-style: normal; font-size: 30px; font-weight: 700; color: var(--chicle); opacity: 0; transform: scale(.4); transition: opacity .3s ease, transform .3s cubic-bezier(.3, 1.6, .5, 1); }
+.co-llevo i.puesta { opacity: 1; transform: none; }
+.co-raya { align-self: stretch; height: 6px; border-radius: 3px; background: var(--tinta); margin: 4px 0 8px 64px; }
+.co-res .co-c { height: 78px; }
+.co-hueco { font-style: normal; width: 60px; height: 70px; border-radius: 14px; border: 4px dashed var(--luna-borde); display: grid; place-items: center; font-size: 56px; font-weight: 700; color: var(--menta-osc); }
+.co-hueco.puesta { border-style: solid; border-color: var(--menta); background: #E9FFF4; animation: pop .4s cubic-bezier(.3, 1.6, .5, 1); }
+.col-op[data-foco="1"] .co-c1, .col-op[data-foco="2"] .co-c2, .col-op[data-foco="3"] .co-c3 { background: rgba(255, 201, 60, .3); }
+.co-a b.tachado { color: #B9A4FF; text-decoration: line-through; text-decoration-thickness: 5px; text-decoration-color: var(--chicle); }
+.co-a sup.nueva { position: absolute; right: -2px; top: -8px; font-size: 28px; color: var(--chicle); }
+.co-a sup.diez { position: absolute; left: 0; top: 4px; font-size: 26px; color: var(--chicle); }
+.col-op.leyendo { box-shadow: inset 0 0 0 3px #EDE3C8, 0 0 0 5px var(--sol); }
+
+/* Tablas de multiplicar */
+.lienzo.tablas { display: flex; align-items: center; justify-content: flex-start; }
+.tb-filas { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.tb-fila { position: relative; display: flex; align-items: center; gap: 2px; height: 56px; padding: 0 8px 0 4px; border-radius: 14px; font-size: 44px; }
+.tb-fila .obj-num { position: static; transform: none; min-width: 64px; height: 44px; margin-right: 6px; font-size: 26px; background: var(--sol); color: var(--tinta); opacity: 0; box-shadow: 0 3px 0 var(--sol-osc); }
+.tb-fila.contado { background: #FFF4CC; }
+.tb-fila.contado .obj-num { opacity: 1; }
+.tb-filas.tapadas .tb-fila { visibility: hidden; }
+
+/* Problemas de multiplicar y de repartir */
+.lienzo.multi { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+.mu-grupos { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: 100%; }
+.mu-grupo { position: relative; width: 156px; min-height: 150px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 8px 10px; border-radius: 26px; background: #F3EEFF; box-shadow: 0 5px 0 var(--luna-borde); }
+.mu-grupo.contado { background: #FFF4CC; box-shadow: 0 5px 0 var(--sol-osc); }
+.mu-grupo .obj-num { left: auto; right: -10px; top: -10px; min-width: 44px; height: 40px; font-size: 24px; }
+.mu-cont { font-size: 60px; }
+.mu-dentro { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; font-size: 26px; }
+.mu-dentro:not(.diez) { grid-template-columns: repeat(auto-fit, minmax(1.25em, 1fr)); width: 100%; justify-items: center; }
+.mu-etiqueta { display: flex; align-items: center; gap: 4px; font-size: 40px; font-weight: 700; color: var(--tinta); }
+.dv-pila { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; width: 620px; font-size: 36px; transition: opacity .4s ease; }
+.dv-pila.repartida { opacity: .25; }
+.dv-platos { display: flex; justify-content: center; gap: 16px; }
+.dv-plato { position: relative; display: flex; flex-direction: column; align-items: center; width: 146px; min-height: 150px; padding: 8px; border-radius: 50%/40%; background: #DCD0FF; box-shadow: 0 5px 0 #B9A4FF; font-size: 26px; }
+.dv-quien { font-size: 54px; }
+.dv-dentro { display: flex; flex-wrap: wrap; justify-content: center; max-width: 130px; }
+
+/* Fracciones */
+.frac { display: inline-flex; flex-direction: column; align-items: center; line-height: .95; font-weight: 700; vertical-align: middle; }
+.frac b { font-size: .62em; }
+.frac i { display: block; width: 1.1em; height: .09em; min-height: 3px; border-radius: 2px; background: currentColor; margin: .05em 0; }
+.respuestas .opcion .frac { font-size: 1.15em; }
+.fraccion-grande { display: grid; place-items: center; }
+.fraccion-grande svg, .carta .fraccion-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.carta .fraccion-svg { width: 84%; height: 84%; }
+.fraccion-svg .fr-parte { transition: filter .3s ease; }
+.fraccion-svg .fr-parte.marcada { stroke: var(--chicle); stroke-width: 3.5; }
+.fr-objetivo { position: absolute; right: 12px; top: 10px; display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 18px; background: #FFF4CC; color: var(--tinta); font-size: clamp(34px, 7vmin, 56px); font-weight: 700; box-shadow: 0 4px 0 var(--sol-osc); }
+.fr-de { font-size: .6em; }
+.fd-grupos { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: clamp(8px, 2vmin, 18px); width: 100%; height: 100%; }
+.fd-grupo { position: relative; display: flex; flex-wrap: wrap; justify-content: center; align-content: center; max-width: 6.4em; gap: 4px; padding: 10px 12px; border-radius: 22px; background: #F3EEFF; box-shadow: 0 4px 0 var(--luna-borde); font-size: clamp(24px, 5.4vmin, 44px); animation: pop .45s cubic-bezier(.3, 1.6, .5, 1); }
+
+/* Reloj con minutos y reloj digital */
+.reloj-svg .min-txt { opacity: 0; transition: opacity .35s ease; }
+.reloj-svg.ver-min .min-txt { opacity: 1; }
+.reloj-svg.ver-min .min-aro { opacity: 1; }
+.reloj-svg.con-minutos.agujas-marcadas .aguja-m { stroke-width: 6; }
+.reloj-digital { align-self: center; padding: 6px 22px; border-radius: 18px; background: #1F1B3A; color: #7CFFB2; font-size: clamp(42px, 9vmin, 76px); font-weight: 700; letter-spacing: .04em; box-shadow: inset 0 0 0 4px #3A3466, 0 6px 0 #0E0B22; font-variant-numeric: tabular-nums; }
+
+/* Problemas largos */
+.problema-largo .p2-paso b { font-size: clamp(30px, 6.4vmin, 52px); }
+
+/* ---------- Ajustes para móviles ---------- */
+@media (orientation: portrait) and (max-width: 480px) {
+  .btn-viaje { width: 96px; height: 96px; }
+  .menu-mapa { padding-right: 122px; gap: 8px; }
+  .chip-rango { display: none; }
+  .barra-mapa .chip { height: 44px; font-size: 19px; }
+  .btn-menu { width: 72px; height: 72px; }
+  .mundo-extras { padding-right: 112px; }
+  .niveles-tarjetas { flex-direction: column; align-items: center; gap: 10px; }
+  .tarjeta-nivel { width: min(86vw, 340px); min-height: 0; flex-direction: row; flex-wrap: wrap; justify-content: center; padding: 10px 14px 14px; gap: 4px 12px; }
+  .tn-edad { font-size: 46px; }
+  .tn-anos { margin-top: 10px; }
+  .tn-texto { width: 100%; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .btn-viaje { width: 76px; height: 76px; right: calc(env(safe-area-inset-right) + 10px); bottom: calc(env(safe-area-inset-bottom) + 10px); }
+  .btn-menu { width: 64px; height: 60px; }
+  .menu-txt { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-viaje, .nivel.siguiente .nivel-disco { animation: none !important; }
+}
+
+/* Respuestas con dibujo y texto (par / impar) y bolsas de diez */
+.respuestas .opcion > .emo:first-child:not(:only-child) { font-size: clamp(30px, 6vmin, 52px); }
+.respuestas .opcion > .emo .ico-d + .ico-d { margin-left: -.42em; }
+.respuestas .opcion small { font-size: clamp(14px, 2.6vmin, 20px); line-height: 1; }
+.respuestas .opcion:has(small) { flex-direction: column; gap: 2px; }
+.bolsa-dentro.diez { font-size: clamp(16px, 3.4vmin, 28px); }
+.rp-quien, .mi-quien { font-size: clamp(32px, 6.4vmin, 54px); }
+.respuestas .opcion > .emo:first-child:not(:only-child) { font-size: clamp(22px, 4.4vmin, 38px); }
